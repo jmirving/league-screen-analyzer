@@ -1,0 +1,71 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{87440DCE-C8F6-4808-82ED-361539EEEF15}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LeagueMapCapture.App", "src\LeagueMapCapture.App\LeagueMapCapture.App.csproj", "{0521701E-1C3A-40E5-A682-46A4254A0138}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LeagueMapCapture.Cli", "src\LeagueMapCapture.Cli\LeagueMapCapture.Cli.csproj", "{3FFF0FB2-45FD-4541-9623-01BAFDB2BA0D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LeagueMapCapture.Core", "src\LeagueMapCapture.Core\LeagueMapCapture.Core.csproj", "{A7137D84-0202-4C46-9A12-9BC053832D03}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LeagueMapCapture.Capture", "src\LeagueMapCapture.Capture\LeagueMapCapture.Capture.csproj", "{9F93FB61-ADBF-4624-8EE8-19102817AEFB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LeagueMapCapture.Imaging", "src\LeagueMapCapture.Imaging\LeagueMapCapture.Imaging.csproj", "{A4B236A0-98F6-462B-92FB-CC2ED95FB15D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LeagueMapCapture.Storage", "src\LeagueMapCapture.Storage\LeagueMapCapture.Storage.csproj", "{17EF9FE7-C3BE-4407-AA8A-08B13F1F54D0}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{6EB3DF91-571C-41D7-AF98-B47891649EC5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LeagueMapCapture.Tests", "tests\LeagueMapCapture.Tests\LeagueMapCapture.Tests.csproj", "{179F3216-EADE-4690-8B22-EA6C2E1424C1}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0521701E-1C3A-40E5-A682-46A4254A0138}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0521701E-1C3A-40E5-A682-46A4254A0138}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0521701E-1C3A-40E5-A682-46A4254A0138}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0521701E-1C3A-40E5-A682-46A4254A0138}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3FFF0FB2-45FD-4541-9623-01BAFDB2BA0D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3FFF0FB2-45FD-4541-9623-01BAFDB2BA0D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3FFF0FB2-45FD-4541-9623-01BAFDB2BA0D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3FFF0FB2-45FD-4541-9623-01BAFDB2BA0D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A7137D84-0202-4C46-9A12-9BC053832D03}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A7137D84-0202-4C46-9A12-9BC053832D03}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A7137D84-0202-4C46-9A12-9BC053832D03}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A7137D84-0202-4C46-9A12-9BC053832D03}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9F93FB61-ADBF-4624-8EE8-19102817AEFB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9F93FB61-ADBF-4624-8EE8-19102817AEFB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9F93FB61-ADBF-4624-8EE8-19102817AEFB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9F93FB61-ADBF-4624-8EE8-19102817AEFB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A4B236A0-98F6-462B-92FB-CC2ED95FB15D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A4B236A0-98F6-462B-92FB-CC2ED95FB15D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A4B236A0-98F6-462B-92FB-CC2ED95FB15D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A4B236A0-98F6-462B-92FB-CC2ED95FB15D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{17EF9FE7-C3BE-4407-AA8A-08B13F1F54D0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{17EF9FE7-C3BE-4407-AA8A-08B13F1F54D0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{17EF9FE7-C3BE-4407-AA8A-08B13F1F54D0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{17EF9FE7-C3BE-4407-AA8A-08B13F1F54D0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{179F3216-EADE-4690-8B22-EA6C2E1424C1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{179F3216-EADE-4690-8B22-EA6C2E1424C1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{179F3216-EADE-4690-8B22-EA6C2E1424C1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{179F3216-EADE-4690-8B22-EA6C2E1424C1}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{0521701E-1C3A-40E5-A682-46A4254A0138} = {87440DCE-C8F6-4808-82ED-361539EEEF15}
+		{3FFF0FB2-45FD-4541-9623-01BAFDB2BA0D} = {87440DCE-C8F6-4808-82ED-361539EEEF15}
+		{A7137D84-0202-4C46-9A12-9BC053832D03} = {87440DCE-C8F6-4808-82ED-361539EEEF15}
+		{9F93FB61-ADBF-4624-8EE8-19102817AEFB} = {87440DCE-C8F6-4808-82ED-361539EEEF15}
+		{A4B236A0-98F6-462B-92FB-CC2ED95FB15D} = {87440DCE-C8F6-4808-82ED-361539EEEF15}
+		{17EF9FE7-C3BE-4407-AA8A-08B13F1F54D0} = {87440DCE-C8F6-4808-82ED-361539EEEF15}
+		{179F3216-EADE-4690-8B22-EA6C2E1424C1} = {6EB3DF91-571C-41D7-AF98-B47891649EC5}
+	EndGlobalSection
+EndGlobal
