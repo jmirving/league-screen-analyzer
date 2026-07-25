@@ -23,9 +23,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\LeagueMapCapture.Core\LeagueMapCapture.Core.csproj" />
-    <ProjectReference Include="..\..\src\LeagueMapCapture.Imaging\LeagueMapCapture.Imaging.csproj" />
-    <ProjectReference Include="..\..\src\LeagueMapCapture.Storage\LeagueMapCapture.Storage.csproj" />
+    <ProjectReference Include="..\..\src\LeagueScreenAnalyzer.Core\LeagueScreenAnalyzer.Core.csproj" />
+    <ProjectReference Include="..\..\src\LeagueScreenAnalyzer.Imaging\LeagueScreenAnalyzer.Imaging.csproj" />
+    <ProjectReference Include="..\..\src\LeagueScreenAnalyzer.Storage\LeagueScreenAnalyzer.Storage.csproj" />
   </ItemGroup>
 
 </Project>

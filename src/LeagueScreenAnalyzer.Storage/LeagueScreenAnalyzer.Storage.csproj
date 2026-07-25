@@ -1,7 +1,7 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\LeagueMapCapture.Core\LeagueMapCapture.Core.csproj" />
+    <ProjectReference Include="..\LeagueScreenAnalyzer.Core\LeagueScreenAnalyzer.Core.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

@@ -1,25 +1,25 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{87440DCE-C8F6-4808-82ED-361539EEEF15}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LeagueMapCapture.App", "src\LeagueMapCapture.App\LeagueMapCapture.App.csproj", "{0521701E-1C3A-40E5-A682-46A4254A0138}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LeagueScreenAnalyzer.App", "src\LeagueScreenAnalyzer.App\LeagueScreenAnalyzer.App.csproj", "{0521701E-1C3A-40E5-A682-46A4254A0138}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LeagueMapCapture.Cli", "src\LeagueMapCapture.Cli\LeagueMapCapture.Cli.csproj", "{3FFF0FB2-45FD-4541-9623-01BAFDB2BA0D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LeagueScreenAnalyzer.Cli", "src\LeagueScreenAnalyzer.Cli\LeagueScreenAnalyzer.Cli.csproj", "{3FFF0FB2-45FD-4541-9623-01BAFDB2BA0D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LeagueMapCapture.Core", "src\LeagueMapCapture.Core\LeagueMapCapture.Core.csproj", "{A7137D84-0202-4C46-9A12-9BC053832D03}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LeagueScreenAnalyzer.Core", "src\LeagueScreenAnalyzer.Core\LeagueScreenAnalyzer.Core.csproj", "{A7137D84-0202-4C46-9A12-9BC053832D03}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LeagueMapCapture.Capture", "src\LeagueMapCapture.Capture\LeagueMapCapture.Capture.csproj", "{9F93FB61-ADBF-4624-8EE8-19102817AEFB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LeagueScreenAnalyzer.Capture", "src\LeagueScreenAnalyzer.Capture\LeagueScreenAnalyzer.Capture.csproj", "{9F93FB61-ADBF-4624-8EE8-19102817AEFB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LeagueMapCapture.Imaging", "src\LeagueMapCapture.Imaging\LeagueMapCapture.Imaging.csproj", "{A4B236A0-98F6-462B-92FB-CC2ED95FB15D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LeagueScreenAnalyzer.Imaging", "src\LeagueScreenAnalyzer.Imaging\LeagueScreenAnalyzer.Imaging.csproj", "{A4B236A0-98F6-462B-92FB-CC2ED95FB15D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LeagueMapCapture.Storage", "src\LeagueMapCapture.Storage\LeagueMapCapture.Storage.csproj", "{17EF9FE7-C3BE-4407-AA8A-08B13F1F54D0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LeagueScreenAnalyzer.Storage", "src\LeagueScreenAnalyzer.Storage\LeagueScreenAnalyzer.Storage.csproj", "{17EF9FE7-C3BE-4407-AA8A-08B13F1F54D0}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{6EB3DF91-571C-41D7-AF98-B47891649EC5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LeagueMapCapture.Tests", "tests\LeagueMapCapture.Tests\LeagueMapCapture.Tests.csproj", "{179F3216-EADE-4690-8B22-EA6C2E1424C1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LeagueScreenAnalyzer.Tests", "tests\LeagueScreenAnalyzer.Tests\LeagueScreenAnalyzer.Tests.csproj", "{179F3216-EADE-4690-8B22-EA6C2E1424C1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -1,4 +1,4 @@
-namespace LeagueMapCapture.Tests;
+namespace LeagueScreenAnalyzer.Tests;
 
 public class UnitTest1
 {
