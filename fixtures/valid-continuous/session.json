@@ -1,0 +1,49 @@
+{
+  "frames": [
+    {
+      "sequence": 1,
+      "sourceTimeMs": 0,
+      "width": 1920,
+      "height": 1080,
+      "clockText": "12:58",
+      "clockVisible": true,
+      "mapVisible": true
+    },
+    {
+      "sequence": 2,
+      "sourceTimeMs": 1000,
+      "width": 1920,
+      "height": 1080,
+      "clockText": "12:59",
+      "clockVisible": true,
+      "mapVisible": true
+    },
+    {
+      "sequence": 3,
+      "sourceTimeMs": 1500,
+      "width": 1920,
+      "height": 1080,
+      "clockText": "12:59",
+      "clockVisible": true,
+      "mapVisible": true
+    },
+    {
+      "sequence": 4,
+      "sourceTimeMs": 2000,
+      "width": 1920,
+      "height": 1080,
+      "clockText": "13:00",
+      "clockVisible": true,
+      "mapVisible": true
+    },
+    {
+      "sequence": 5,
+      "sourceTimeMs": 3000,
+      "width": 1920,
+      "height": 1080,
+      "clockText": "13:01",
+      "clockVisible": true,
+      "mapVisible": true
+    }
+  ]
+}

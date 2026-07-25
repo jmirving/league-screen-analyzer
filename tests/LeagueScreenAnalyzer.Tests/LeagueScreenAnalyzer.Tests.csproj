@@ -23,6 +23,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\LeagueScreenAnalyzer.Capture\LeagueScreenAnalyzer.Capture.csproj" />
+    <ProjectReference Include="..\..\src\LeagueScreenAnalyzer.Cli\LeagueScreenAnalyzer.Cli.csproj" />
     <ProjectReference Include="..\..\src\LeagueScreenAnalyzer.Core\LeagueScreenAnalyzer.Core.csproj" />
     <ProjectReference Include="..\..\src\LeagueScreenAnalyzer.Imaging\LeagueScreenAnalyzer.Imaging.csproj" />
     <ProjectReference Include="..\..\src\LeagueScreenAnalyzer.Storage\LeagueScreenAnalyzer.Storage.csproj" />

@@ -1,0 +1,31 @@
+{
+  "frames": [
+    {
+      "sequence": 1,
+      "sourceTimeMs": 0,
+      "width": 1920,
+      "height": 1080,
+      "clockText": "10:01",
+      "clockVisible": true,
+      "mapVisible": true
+    },
+    {
+      "sequence": 2,
+      "sourceTimeMs": 1000,
+      "width": 1920,
+      "height": 1080,
+      "clockText": "20:00",
+      "clockVisible": true,
+      "mapVisible": true
+    },
+    {
+      "sequence": 3,
+      "sourceTimeMs": 2000,
+      "width": 1920,
+      "height": 1080,
+      "clockText": "10:03",
+      "clockVisible": true,
+      "mapVisible": true
+    }
+  ]
+}

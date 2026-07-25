@@ -1,0 +1,78 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v8.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v8.0": {
+      "LeagueScreenAnalyzer.App/1.0.0": {
+        "dependencies": {
+          "LeagueScreenAnalyzer.Capture": "1.0.0",
+          "LeagueScreenAnalyzer.Core": "1.0.0",
+          "LeagueScreenAnalyzer.Imaging": "1.0.0",
+          "LeagueScreenAnalyzer.Storage": "1.0.0"
+        },
+        "runtime": {
+          "LeagueScreenAnalyzer.App.dll": {}
+        }
+      },
+      "LeagueScreenAnalyzer.Capture/1.0.0": {
+        "dependencies": {
+          "LeagueScreenAnalyzer.Core": "1.0.0"
+        },
+        "runtime": {
+          "LeagueScreenAnalyzer.Capture.dll": {}
+        }
+      },
+      "LeagueScreenAnalyzer.Core/1.0.0": {
+        "runtime": {
+          "LeagueScreenAnalyzer.Core.dll": {}
+        }
+      },
+      "LeagueScreenAnalyzer.Imaging/1.0.0": {
+        "dependencies": {
+          "LeagueScreenAnalyzer.Core": "1.0.0"
+        },
+        "runtime": {
+          "LeagueScreenAnalyzer.Imaging.dll": {}
+        }
+      },
+      "LeagueScreenAnalyzer.Storage/1.0.0": {
+        "dependencies": {
+          "LeagueScreenAnalyzer.Core": "1.0.0"
+        },
+        "runtime": {
+          "LeagueScreenAnalyzer.Storage.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "LeagueScreenAnalyzer.App/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "LeagueScreenAnalyzer.Capture/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "LeagueScreenAnalyzer.Core/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "LeagueScreenAnalyzer.Imaging/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "LeagueScreenAnalyzer.Storage/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

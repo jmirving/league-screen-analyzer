@@ -1,0 +1,160 @@
+{
+  "version": 3,
+  "targets": {
+    "net8.0-windows7.0": {
+      "LeagueScreenAnalyzer.Capture/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v8.0",
+        "dependencies": {
+          "LeagueScreenAnalyzer.Core": "1.0.0"
+        },
+        "compile": {
+          "bin/placeholder/LeagueScreenAnalyzer.Capture.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/LeagueScreenAnalyzer.Capture.dll": {}
+        }
+      },
+      "LeagueScreenAnalyzer.Core/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v8.0",
+        "compile": {
+          "bin/placeholder/LeagueScreenAnalyzer.Core.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/LeagueScreenAnalyzer.Core.dll": {}
+        }
+      },
+      "LeagueScreenAnalyzer.Imaging/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v8.0",
+        "dependencies": {
+          "LeagueScreenAnalyzer.Core": "1.0.0"
+        },
+        "compile": {
+          "bin/placeholder/LeagueScreenAnalyzer.Imaging.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/LeagueScreenAnalyzer.Imaging.dll": {}
+        }
+      },
+      "LeagueScreenAnalyzer.Storage/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v8.0",
+        "dependencies": {
+          "LeagueScreenAnalyzer.Core": "1.0.0"
+        },
+        "compile": {
+          "bin/placeholder/LeagueScreenAnalyzer.Storage.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/LeagueScreenAnalyzer.Storage.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "LeagueScreenAnalyzer.Capture/1.0.0": {
+      "type": "project",
+      "path": "../LeagueScreenAnalyzer.Capture/LeagueScreenAnalyzer.Capture.csproj",
+      "msbuildProject": "../LeagueScreenAnalyzer.Capture/LeagueScreenAnalyzer.Capture.csproj"
+    },
+    "LeagueScreenAnalyzer.Core/1.0.0": {
+      "type": "project",
+      "path": "../LeagueScreenAnalyzer.Core/LeagueScreenAnalyzer.Core.csproj",
+      "msbuildProject": "../LeagueScreenAnalyzer.Core/LeagueScreenAnalyzer.Core.csproj"
+    },
+    "LeagueScreenAnalyzer.Imaging/1.0.0": {
+      "type": "project",
+      "path": "../LeagueScreenAnalyzer.Imaging/LeagueScreenAnalyzer.Imaging.csproj",
+      "msbuildProject": "../LeagueScreenAnalyzer.Imaging/LeagueScreenAnalyzer.Imaging.csproj"
+    },
+    "LeagueScreenAnalyzer.Storage/1.0.0": {
+      "type": "project",
+      "path": "../LeagueScreenAnalyzer.Storage/LeagueScreenAnalyzer.Storage.csproj",
+      "msbuildProject": "../LeagueScreenAnalyzer.Storage/LeagueScreenAnalyzer.Storage.csproj"
+    }
+  },
+  "projectFileDependencyGroups": {
+    "net8.0-windows7.0": [
+      "LeagueScreenAnalyzer.Capture >= 1.0.0",
+      "LeagueScreenAnalyzer.Core >= 1.0.0",
+      "LeagueScreenAnalyzer.Imaging >= 1.0.0",
+      "LeagueScreenAnalyzer.Storage >= 1.0.0"
+    ]
+  },
+  "packageFolders": {
+    "C:\\Users\\Owner\\.nuget\\packages\\": {}
+  },
+  "project": {
+    "version": "1.0.0",
+    "restore": {
+      "projectUniqueName": "C:\\Users\\Owner\\projects\\lol\\league-screen-analyzer\\src\\LeagueScreenAnalyzer.App\\LeagueScreenAnalyzer.App.csproj",
+      "projectName": "LeagueScreenAnalyzer.App",
+      "projectPath": "C:\\Users\\Owner\\projects\\lol\\league-screen-analyzer\\src\\LeagueScreenAnalyzer.App\\LeagueScreenAnalyzer.App.csproj",
+      "packagesPath": "C:\\Users\\Owner\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\Owner\\projects\\lol\\league-screen-analyzer\\src\\LeagueScreenAnalyzer.App\\obj\\",
+      "projectStyle": "PackageReference",
+      "configFilePaths": [
+        "C:\\Users\\Owner\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+      ],
+      "originalTargetFrameworks": [
+        "net8.0-windows"
+      ],
+      "sources": {
+        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+        "https://api.nuget.org/v3/index.json": {}
+      },
+      "frameworks": {
+        "net8.0-windows7.0": {
+          "targetAlias": "net8.0-windows",
+          "projectReferences": {
+            "C:\\Users\\Owner\\projects\\lol\\league-screen-analyzer\\src\\LeagueScreenAnalyzer.Capture\\LeagueScreenAnalyzer.Capture.csproj": {
+              "projectPath": "C:\\Users\\Owner\\projects\\lol\\league-screen-analyzer\\src\\LeagueScreenAnalyzer.Capture\\LeagueScreenAnalyzer.Capture.csproj"
+            },
+            "C:\\Users\\Owner\\projects\\lol\\league-screen-analyzer\\src\\LeagueScreenAnalyzer.Core\\LeagueScreenAnalyzer.Core.csproj": {
+              "projectPath": "C:\\Users\\Owner\\projects\\lol\\league-screen-analyzer\\src\\LeagueScreenAnalyzer.Core\\LeagueScreenAnalyzer.Core.csproj"
+            },
+            "C:\\Users\\Owner\\projects\\lol\\league-screen-analyzer\\src\\LeagueScreenAnalyzer.Imaging\\LeagueScreenAnalyzer.Imaging.csproj": {
+              "projectPath": "C:\\Users\\Owner\\projects\\lol\\league-screen-analyzer\\src\\LeagueScreenAnalyzer.Imaging\\LeagueScreenAnalyzer.Imaging.csproj"
+            },
+            "C:\\Users\\Owner\\projects\\lol\\league-screen-analyzer\\src\\LeagueScreenAnalyzer.Storage\\LeagueScreenAnalyzer.Storage.csproj": {
+              "projectPath": "C:\\Users\\Owner\\projects\\lol\\league-screen-analyzer\\src\\LeagueScreenAnalyzer.Storage\\LeagueScreenAnalyzer.Storage.csproj"
+            }
+          }
+        }
+      },
+      "warningProperties": {
+        "warnAsError": [
+          "NU1605"
+        ]
+      }
+    },
+    "frameworks": {
+      "net8.0-windows7.0": {
+        "targetAlias": "net8.0-windows",
+        "imports": [
+          "net461",
+          "net462",
+          "net47",
+          "net471",
+          "net472",
+          "net48",
+          "net481"
+        ],
+        "assetTargetFallback": true,
+        "warn": true,
+        "frameworkReferences": {
+          "Microsoft.NETCore.App": {
+            "privateAssets": "all"
+          },
+          "Microsoft.WindowsDesktop.App.WPF": {
+            "privateAssets": "none"
+          }
+        },
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.100/PortableRuntimeIdentifierGraph.json"
+      }
+    }
+  }
+}
