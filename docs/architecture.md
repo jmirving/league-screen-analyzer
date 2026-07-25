@@ -1,9 +1,68 @@
 # Architecture
 
-## Processing flow
+## Dependency direction
+
+`LeagueScreenAnalyzer.Core` remains free of WPF, Win32, WinRT, Direct3D, and `Windows.Graphics.Capture`. It owns immutable domain records and `IFrameSource` plus the downstream processing contracts.
+
+`LeagueScreenAnalyzer.Capture` multi-targets plain .NET 8 and Windows 10 build 19041. Platform-neutral targets contain fixture processing, capture lifecycle contracts, the controller, and bounded latest-frame delivery. Its Windows target additionally contains the picker, D3D device interop, capture frame pool, and CPU readback implementation.
+
+`LeagueScreenAnalyzer.App` targets the same Windows SDK floor. It composes the capture implementation, provides the owner HWND through a small WPF service, marshals preview updates to the dispatcher, and presents them in a reusable `WriteableBitmap`. Capture logic does not live in code-behind; code-behind is limited to composition and window-close disposal.
+
+The fixture CLI continues to consume the plain `net8.0` Capture target, so automated fixture processing does not acquire a Windows UI or graphics dependency.
+
+## Capture flow
 
 ```text
-Frame source
+Select Window command
+  → CaptureController
+  → WindowsCaptureSessionSelector
+  → GraphicsCapturePicker (initialized with WPF HWND)
+  → WindowsCaptureSession
+  → Direct3D11CaptureFramePool (two GPU buffers)
+  → SoftwareBitmap GPU-to-CPU copy
+  → pooled tightly packed BGRA memory
+  → LatestFrameQueue (one pending frame)
+  → IFrameSource / CaptureController
+  → WPF dispatcher
+  → reusable WriteableBitmap
+```
+
+The controller state machine exposes `Idle`, `Selecting`, `Capturing`, `Stopped`, and `Error`. A selected session is initialized before the state changes to `Capturing`. Picker cancellation and permission/support failures become recoverable visible errors. Explicit stop cancels the frame pump, stops the platform session, drains completion, and disposes it. Repeated stop is safe.
+
+`GraphicsCaptureItem.Closed` completes the session with `SourceClosed`. Invalid content dimensions complete it with `InvalidFrameSize`. Other asynchronous platform failures complete it with `Failure`. The controller translates each reason into a visible state and diagnostic. A subsequent selection first releases any completed session before opening the picker.
+
+When `ContentSize` changes, the capture session logs the new dimensions and calls `Direct3D11CaptureFramePool.Recreate`. Existing frame-pool frames are discarded by the Windows API. Preview metadata and the WPF bitmap are resized on the next delivered frame.
+
+## Frame ownership
+
+- `Direct3D11CaptureFrame` is scoped to one frame-arrival callback and is never retained after readback.
+- Its `IDirect3DSurface` is used only while `SoftwareBitmap.CreateCopyFromSurfaceAsync` runs.
+- `SoftwareBitmap`, `BitmapBuffer`, and `IMemoryBufferReference` are disposed before the callback returns.
+- The copied BGRA array is rented from `ArrayPool<byte>`. `Bgra32FramePayload.Dispose` returns it exactly once.
+- `LatestFrameQueue` holds no more than one pending CPU frame. Replacing a stale frame immediately disposes its payload.
+- `CaptureController` owns each delivered payload only during its synchronous `FrameArrived` notification and disposes it immediately afterward.
+- The WPF handler copies pixels synchronously into a reusable `WriteableBitmap`; it does not retain the capture payload.
+- Capture sessions own and dispose the Direct3D device projection, frame pool, and graphics capture session. Stop and async disposal are idempotent.
+- The diagnostic PNG encoder reads the current WPF bitmap only when explicitly requested and closes its output stream immediately.
+
+## Preview tradeoff and future extraction
+
+The current presentation path performs a GPU-to-CPU copy and one CPU copy into WPF. It avoids a new full-size managed allocation per presented frame by pooling capture arrays and reusing the `WriteableBitmap`. It also rejects overlapping readbacks and replaces stale queued frames, favoring latency and bounded memory over presenting every source frame.
+
+This costs more bandwidth than a D3D-backed WPF bridge. The `IFrameSource` boundary and `Bgra32FramePayload` keep presentation separate from session lifecycle while leaving the Windows session close to the source GPU surface. A later milestone can add GPU region extraction or a D3D presentation adapter without adding Windows types to Core.
+
+## Structured diagnostics
+
+Normal logging records picker open/cancel, capture start/stop, dimension changes, target closure, capture failures, and one-shot PNG paths. Per-frame logging is intentionally absent. The WPF composition root currently sends structured logs to the Visual Studio/debug output provider.
+
+## Deterministic testing
+
+Platform calls sit behind `ICaptureSessionSelector` and `ILiveCaptureSession`. Tests exercise controller transitions, cancellation, initialization failure, source closure, active/repeated stop, reselection, and dimension/sequence/timestamp updates with fakes. `LatestFrameQueue` tests prove stale disposal and a one-frame pending bound. Existing fixture tests continue against the plain .NET target.
+
+## Existing processing flow
+
+```text
+IFrameSource
   → region extraction
   → clock and map validation
   → normalized observation timeline
@@ -11,38 +70,8 @@ Frame source
   → future analysis
 ```
 
-`IFrameSource` asynchronously streams implementation-neutral `SourceFrame` values. `IRegionExtractor` applies a `CaptureLayout` and returns clock and minimap `RegionFrame` values. `IGameClockReader` and `IMapFrameValidator` independently describe their evidence; `IObservationProcessor` marks an observation valid only when both results are valid. `ISessionArtifactWriter` persists the completed timeline without placing a database or image-format dependency in the domain.
+Fixture payloads carry deterministic clock/visibility metadata. Live payloads carry an owned BGRA lease. Both cross the same `IFrameSource`/`SourceFrame` boundary; downstream live region extraction is intentionally deferred.
 
-## Dependency direction
+## Next milestone
 
-`LeagueScreenAnalyzer.Core` contains immutable domain models and contracts. It has no dependency on WPF, Windows capture APIs, storage, or an imaging implementation.
-
-The outer projects implement those contracts:
-
-- `Capture` currently supplies fixture frames, fixture-aware processors, and session orchestration.
-- `Storage` currently supplies JSON Lines and JSON artifact persistence.
-- `Cli` composes the deterministic vertical slice.
-- `App` is an inert MVVM shell and contains no processing logic.
-- `Imaging` is intentionally empty until real image-backed implementations are introduced.
-
-Payloads cross boundaries through the marker interface `IFramePayload`. Production capture can later carry an image lease or reference without changing domain records. The fixture source carries synthetic clock and visibility metadata instead.
-
-## Timeline and gaps
-
-A timeline observation is valid only when its clock reading and map validation are both valid. Unavailable frames keep their diagnostics but do not receive a guessed game time.
-
-The session processor emits a gap only when one or more unavailable observations occur between two valid game-time anchors. Leading and trailing unavailable frames remain unavailable but cannot form a bounded `GapInterval` because one anchor is absent.
-
-The deterministic clock reader accepts repeated values and minute rollover. It rejects backward movement and forward movement that is implausible relative to elapsed source time and the configured maximum fixture playback rate.
-
-## Why fixtures are first-class
-
-Screen capture, OCR, broadcast layouts, and the League replay client are slow and environment-dependent integration points. JSON fixtures make visibility, clock text, timing, and discontinuities explicit and reviewable. They let contributors reproduce pipeline behavior without League, GPU capture support, binary assets, or manual UI steps.
-
-Fixtures are not a temporary alternative code path. They implement the same interfaces that production capture and imaging components will implement, so they remain useful for regression tests as the system grows.
-
-## Why the CLI is first-class
-
-The CLI is the composition root for automated processing. It exercises manifest loading, streaming, extraction, validation, observation construction, gap detection, and storage in one deterministic command. Tests invoke its `FixtureProcessingService` directly rather than spawning a child process.
-
-Keeping the workflow outside WPF prevents business logic from accumulating in code-behind and gives future agents a fast, scriptable development loop. The WPF application can later compose the same services for preview and capture sessions.
+Draw, edit, save, and preview normalized clock and minimap regions over the selected-window preview.

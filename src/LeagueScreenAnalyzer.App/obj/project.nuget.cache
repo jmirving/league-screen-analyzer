@@ -1,8 +1,18 @@
 {
   "version": 2,
-  "dgSpecHash": "HrRztryo4TZElytwJBWGdkN3oi2t09bXZ2n5BT1brj1gQqEtvEtCL1sLWDby+4vXSRliPnyD4B7P08n6l+Zcgg==",
+  "dgSpecHash": "3paT4PorlB4g4EH5nN3QMwfkW9/YJ05r9ALqo/0bQkF/xMRLhD/mECrOMqX4TIOX/C2+TE+JegmaC7FOZCSGCA==",
   "success": true,
   "projectFilePath": "C:\\Users\\Owner\\projects\\lol\\league-screen-analyzer\\src\\LeagueScreenAnalyzer.App\\LeagueScreenAnalyzer.App.csproj",
-  "expectedPackageFiles": [],
+  "expectedPackageFiles": [
+    "C:\\Users\\Owner\\.nuget\\packages\\microsoft.extensions.dependencyinjection\\10.0.10\\microsoft.extensions.dependencyinjection.10.0.10.nupkg.sha512",
+    "C:\\Users\\Owner\\.nuget\\packages\\microsoft.extensions.dependencyinjection.abstractions\\10.0.10\\microsoft.extensions.dependencyinjection.abstractions.10.0.10.nupkg.sha512",
+    "C:\\Users\\Owner\\.nuget\\packages\\microsoft.extensions.logging\\10.0.10\\microsoft.extensions.logging.10.0.10.nupkg.sha512",
+    "C:\\Users\\Owner\\.nuget\\packages\\microsoft.extensions.logging.abstractions\\10.0.10\\microsoft.extensions.logging.abstractions.10.0.10.nupkg.sha512",
+    "C:\\Users\\Owner\\.nuget\\packages\\microsoft.extensions.logging.debug\\10.0.10\\microsoft.extensions.logging.debug.10.0.10.nupkg.sha512",
+    "C:\\Users\\Owner\\.nuget\\packages\\microsoft.extensions.options\\10.0.10\\microsoft.extensions.options.10.0.10.nupkg.sha512",
+    "C:\\Users\\Owner\\.nuget\\packages\\microsoft.extensions.primitives\\10.0.10\\microsoft.extensions.primitives.10.0.10.nupkg.sha512",
+    "C:\\Users\\Owner\\.nuget\\packages\\system.diagnostics.diagnosticsource\\10.0.10\\system.diagnostics.diagnosticsource.10.0.10.nupkg.sha512",
+    "C:\\Users\\Owner\\.nuget\\packages\\microsoft.windows.sdk.net.ref\\10.0.19041.31\\microsoft.windows.sdk.net.ref.10.0.19041.31.nupkg.sha512"
+  ],
   "logs": []
 }

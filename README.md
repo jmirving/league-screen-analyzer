@@ -1,37 +1,38 @@
 # League Screen Analyzer
 
-League Screen Analyzer is a Windows-first .NET 8 application for capturing selected regions of League of Legends video sources and producing synchronized, analysis-ready game data. The current milestone establishes deterministic processing boundaries; it does not capture a live window yet.
+League Screen Analyzer is a Windows-only .NET 8 application for capturing League of Legends video sources and producing synchronized, analysis-ready game data. The WPF application can now select a visible application window with the supported Windows graphics-capture picker and show a live preview.
 
-## Ingestion paths
+## Requirements
 
-The architecture supports two required source paths:
+- Windows 10 version 2004 (build 19041) or later, or Windows 11.
+- Compatible Direct3D 11 graphics hardware and a desktop session where `Windows.Graphics.Capture` is supported.
+- .NET 8 SDK to build from source.
 
-1. **Professional match VODs played for capture.** A valid frame requires both the broadcast clock and minimap. Replays, overlays, fight windows, desk segments, and similar interruptions remain explicit unavailable intervals.
-2. **Personal `.rofl` replays.** The application will launch the League replay client and capture its rendered output. It will not decode `.rofl` files directly. A stable replay layout and variable playback speed will allow extraction speed to trade against game-time resolution.
+The selected window may remain partially or fully covered while capture continues. Windows and applications can still opt out of capture, and protected video may appear blank.
 
 ## Current scope
 
-This milestone provides:
+- Immutable domain models and implementation-neutral processing interfaces.
+- Deterministic JSON fixture source, fixture-aware clock/map processors, CLI processing, and JSON artifacts.
+- Supported Windows picker for user-selected window capture.
+- Live, aspect-preserving WPF preview with source title, dimensions, sequence, timestamp, and status.
+- Explicit stop, selected-window closure detection, and frame-pool recreation after a size change.
+- A one-frame PNG diagnostic saved on demand to `artifacts`.
+- Structured lifecycle logging through `Microsoft.Extensions.Logging`.
 
-- Immutable domain models with strict normalized-region validation.
-- Replaceable asynchronous frame, extraction, validation, observation, and storage interfaces.
-- JSON fixture manifests and deterministic fixture-aware processors.
-- Stateful clock progression validation and explicit gap detection.
-- A CLI that writes a JSON Lines timeline and JSON summary.
-- A minimal, non-capturing WPF MVVM shell.
-- Fast deterministic xUnit coverage and a root verification script.
+This milestone does not select regions, run OCR, persist live frame streams, launch `.rofl` files, control replay speed, or analyze images.
 
 ## Project structure
 
-- `src/LeagueScreenAnalyzer.App` — WPF application shell.
+- `src/LeagueScreenAnalyzer.App` — WPF MVVM application and preview adapter.
 - `src/LeagueScreenAnalyzer.Cli` — fixture-processing command and application service.
-- `src/LeagueScreenAnalyzer.Core` — domain models and implementation-neutral contracts.
-- `src/LeagueScreenAnalyzer.Capture` — fixture source and deterministic processing pipeline.
-- `src/LeagueScreenAnalyzer.Imaging` — reserved for future image-based implementations.
+- `src/LeagueScreenAnalyzer.Core` — immutable domain models and platform-neutral contracts.
+- `src/LeagueScreenAnalyzer.Capture` — fixture pipeline, capture controller, and Windows capture implementation.
+- `src/LeagueScreenAnalyzer.Imaging` — reserved for later image processing.
 - `src/LeagueScreenAnalyzer.Storage` — JSON session artifact writer.
-- `tests/LeagueScreenAnalyzer.Tests` — deterministic unit and service tests.
+- `tests/LeagueScreenAnalyzer.Tests` — deterministic lifecycle, queue, domain, and service tests.
 - `fixtures` — human-authored session manifests.
-- `docs/architecture.md` — dependency and data-flow decisions.
+- `docs/architecture.md` — dependency, capture, ownership, and data-flow decisions.
 
 ## Build and test
 
@@ -41,46 +42,46 @@ From the repository root:
 dotnet restore LeagueScreenAnalyzer.sln
 dotnet build LeagueScreenAnalyzer.sln
 dotnet test LeagueScreenAnalyzer.sln
-```
-
-Run the complete verification workflow on Windows:
-
-```text
 scripts\verify.cmd
 ```
 
-## Fixture CLI
+## Live preview
 
-Process the valid continuous fixture:
+Run:
+
+```text
+dotnet run --project src\LeagueScreenAnalyzer.App
+```
+
+Manual test:
+
+1. Click **Select Window** and choose a browser, video player, or other visible application window in the Windows picker.
+2. Confirm the title, dimensions, sequence/timestamp, and live preview update.
+3. Cover the selected window and confirm capture continues.
+4. Resize the selected window and confirm the preview follows without distortion.
+5. Click **Save Diagnostic Frame**, then open the reported PNG under `artifacts` to inspect colors, orientation, scaling, and dimensions.
+6. Click **Stop**, then select a different window.
+7. Repeat capture and close the selected target window; confirm the application reports a clear stopped/error state.
+8. Close League Screen Analyzer and confirm no application process remains.
+
+Picker cancellation is reported as a visible, recoverable error so that the user can immediately try again.
+
+## Fixture CLI
 
 ```text
 dotnet run --project src/LeagueScreenAnalyzer.Cli -- process-fixture --source fixtures/valid-continuous/session.json --output artifacts/valid-continuous
 ```
 
-The output directory contains:
+The output contains `timeline.jsonl` and `summary.json`. Additional fixtures model a broadcast interruption and an invalid clock jump.
 
-- `timeline.jsonl` — one normalized observation per source frame.
-- `summary.json` — counts, game-time bounds, gaps, and rejected clocks.
+## Current limitations
 
-Additional fixtures model a broadcast interruption and an invalid clock jump.
-
-## Current milestone
-
-The deterministic vertical slice proves that streaming sources, region extraction, clock and map validation, timeline normalization, explicit gaps, and artifact writing can be developed without WPF interaction or a running League client.
-
-## Non-goals
-
-This milestone intentionally does not implement:
-
-- Windows screen capture or replay-client launching.
-- OpenCV or another imaging library.
-- OCR.
-- SQLite.
-- FFmpeg.
-- Direct `.rofl` decoding.
-- League-specific analysis, champion detection, or heatmaps.
-- Guessing or interpolating data across unavailable intervals.
+- Preview uses GPU-to-CPU readback into BGRA pixels and then copies into a reusable WPF `WriteableBitmap`. This is intentionally simple and safe, but more expensive than a zero-copy D3D presentation bridge.
+- A maximum of one copied preview frame waits for presentation. Slow rendering drops and disposes stale frames.
+- HDR sources are requested as 8-bit BGRA and may not reproduce HDR color exactly.
+- Diagnostic saving snapshots only the current preview; continuous recording is not implemented.
+- Capture availability and protected-content behavior remain controlled by Windows and the selected application.
 
 ## Next milestone
 
-Add a selected-window preview using `Windows.Graphics.Capture`, while preserving the same `IFrameSource` and downstream fixture-testable processing boundaries.
+Draw, edit, save, and preview normalized clock and minimap regions over the selected-window preview.

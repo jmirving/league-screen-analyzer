@@ -1,22 +1,15 @@
 <Window x:Class="LeagueScreenAnalyzer.App.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:viewModels="clr-namespace:LeagueScreenAnalyzer.App.ViewModels"
-        mc:Ignorable="d"
-        Title="League Screen Analyzer"
-        Height="560"
-        Width="760"
-        MinHeight="520"
-        MinWidth="680"
+        Title="{Binding Title}"
+        Height="720"
+        Width="980"
+        MinHeight="560"
+        MinWidth="720"
         WindowStartupLocation="CenterScreen">
-    <Window.DataContext>
-        <viewModels:MainWindowViewModel />
-    </Window.DataContext>
-
     <Grid Margin="24">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
@@ -31,60 +24,86 @@
                        Text="{Binding MilestoneDescription}" />
         </StackPanel>
 
-        <Grid Grid.Row="1">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-            </Grid.RowDefinitions>
+        <GroupBox Grid.Row="1"
+                  Header="Source"
+                  Padding="14"
+                  Margin="0,0,0,14">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
 
-            <GroupBox Header="Source" Padding="14" Margin="0,0,0,10">
-                <DockPanel LastChildFill="True">
-                    <Button DockPanel.Dock="Right"
-                            Width="120"
-                            Margin="16,0,0,0"
-                            Content="Select Window"
-                            IsEnabled="False" />
-                    <TextBlock VerticalAlignment="Center"
-                               Text="{Binding SourceStatus}" />
-                </DockPanel>
-            </GroupBox>
+                <Button Width="130"
+                        Height="30"
+                        Margin="0,0,8,12"
+                        Command="{Binding SelectWindowCommand}"
+                        Content="Select Window" />
+                <Button Grid.Column="1"
+                        Width="100"
+                        Height="30"
+                        Margin="0,0,8,12"
+                        Command="{Binding StopCaptureCommand}"
+                        Content="Stop" />
+                <Button Grid.Column="2"
+                        Width="170"
+                        Height="30"
+                        Margin="0,0,0,12"
+                        Command="{Binding SaveDiagnosticFrameCommand}"
+                        Content="Save Diagnostic Frame" />
 
-            <GroupBox Grid.Row="1" Header="Clock Region" Padding="14" Margin="0,0,0,10">
-                <TextBlock Text="{Binding ClockRegionStatus}" />
-            </GroupBox>
-
-            <GroupBox Grid.Row="2" Header="Minimap Region" Padding="14" Margin="0,0,0,10">
-                <TextBlock Text="{Binding MinimapRegionStatus}" />
-            </GroupBox>
-
-            <GroupBox Grid.Row="3" Header="Session Status" Padding="14">
-                <DockPanel LastChildFill="True">
-                    <Button DockPanel.Dock="Right"
-                            Width="120"
-                            Margin="16,0,0,0"
-                            Content="Start Capture"
-                            IsEnabled="False" />
-                    <StackPanel>
-                        <TextBlock FontWeight="SemiBold"
-                                   Text="{Binding SessionStatus}" />
-                        <TextBlock Margin="0,5,0,0"
-                                   Foreground="DimGray"
-                                   Text="{Binding CliGuidance}" />
-                    </StackPanel>
-                </DockPanel>
-            </GroupBox>
-        </Grid>
+                <TextBlock Grid.Row="1" FontWeight="SemiBold" Text="Status:" />
+                <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3"
+                           Margin="8,0,0,0" Text="{Binding CaptureStatus}" />
+                <TextBlock Grid.Row="2" FontWeight="SemiBold" Text="Window:" />
+                <TextBlock Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="3"
+                           Margin="8,0,0,0" Text="{Binding SelectedSourceName}" />
+                <TextBlock Grid.Row="3" FontWeight="SemiBold" Text="Frame:" />
+                <StackPanel Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="3"
+                            Margin="8,0,0,0" Orientation="Horizontal">
+                    <TextBlock Text="{Binding FrameDimensions}" />
+                    <TextBlock Margin="18,0,0,0" Foreground="DimGray"
+                               Text="{Binding LatestFrame}" />
+                </StackPanel>
+            </Grid>
+        </GroupBox>
 
         <Border Grid.Row="2"
-                Margin="0,18,0,0"
-                Padding="12"
-                Background="#FFF3F4F6"
-                CornerRadius="4">
-            <TextBlock Foreground="#FF374151"
-                       TextWrapping="Wrap"
-                       Text="Capture controls are intentionally disabled in this milestone." />
+                Background="#FF111827"
+                BorderBrush="#FF374151"
+                BorderThickness="1">
+            <Grid>
+                <TextBlock HorizontalAlignment="Center"
+                           VerticalAlignment="Center"
+                           Foreground="#FF9CA3AF"
+                           FontSize="18"
+                           Text="Live preview" />
+                <Image Margin="1"
+                       HorizontalAlignment="Stretch"
+                       VerticalAlignment="Stretch"
+                       Source="{Binding PreviewImage}"
+                       Stretch="Uniform"
+                       SnapsToDevicePixels="True" />
+            </Grid>
         </Border>
+
+        <StackPanel Grid.Row="3" Margin="0,14,0,0">
+            <TextBlock Foreground="#FFB91C1C"
+                       FontWeight="SemiBold"
+                       TextWrapping="Wrap"
+                       Text="{Binding ErrorMessage}" />
+            <TextBlock Margin="0,4,0,0"
+                       Foreground="DimGray"
+                       TextWrapping="Wrap"
+                       Text="{Binding DiagnosticMessage}" />
+        </StackPanel>
     </Grid>
 </Window>

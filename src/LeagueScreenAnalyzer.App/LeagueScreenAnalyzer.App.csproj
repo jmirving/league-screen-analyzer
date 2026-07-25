@@ -5,14 +5,16 @@
     <ProjectReference Include="..\LeagueScreenAnalyzer.Capture\LeagueScreenAnalyzer.Capture.csproj" />
     <ProjectReference Include="..\LeagueScreenAnalyzer.Imaging\LeagueScreenAnalyzer.Imaging.csproj" />
     <ProjectReference Include="..\LeagueScreenAnalyzer.Storage\LeagueScreenAnalyzer.Storage.csproj" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.10" />
   </ItemGroup>
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net8.0-windows</TargetFramework>
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
 </Project>
