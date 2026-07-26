@@ -140,6 +140,7 @@
       },
       "LeagueScreenAnalyzer.Storage/1.0.0": {
         "dependencies": {
+          "LeagueScreenAnalyzer.Capture": "1.0.0",
           "LeagueScreenAnalyzer.Core": "1.0.0"
         },
         "runtime": {

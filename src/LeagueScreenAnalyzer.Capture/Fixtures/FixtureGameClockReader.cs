@@ -51,7 +51,9 @@ public sealed class FixtureGameClockReader : IGameClockReader
                 null,
                 0,
                 ClockReadingStatus.NotVisible,
-                "Clock region is not visible."));
+                "Clock region is not visible.",
+                sourceFrameSequence: clockFrame.SourceFrameSequence,
+                sourceTimestamp: clockFrame.SourceTimestamp));
         }
 
         if (!TryParseClock(payload.ClockText, out TimeSpan gameTime))
@@ -60,7 +62,9 @@ public sealed class FixtureGameClockReader : IGameClockReader
                 null,
                 0,
                 ClockReadingStatus.Malformed,
-                $"Clock text '{payload.ClockText ?? "<null>"}' is not in m:ss format."));
+                $"Clock text '{payload.ClockText ?? "<null>"}' is not in m:ss format.",
+                sourceFrameSequence: clockFrame.SourceFrameSequence,
+                sourceTimestamp: clockFrame.SourceTimestamp));
         }
 
         if (_lastGameTime is not null && _lastSourceTimestamp is not null)
@@ -71,7 +75,9 @@ public sealed class FixtureGameClockReader : IGameClockReader
                     null,
                     0,
                     ClockReadingStatus.Backward,
-                    $"Clock moved backward from {Format(_lastGameTime.Value)} to {Format(gameTime)}."));
+                    $"Clock moved backward from {Format(_lastGameTime.Value)} to {Format(gameTime)}.",
+                    sourceFrameSequence: clockFrame.SourceFrameSequence,
+                    sourceTimestamp: clockFrame.SourceTimestamp));
             }
 
             TimeSpan sourceDelta = clockFrame.SourceTimestamp - _lastSourceTimestamp.Value;
@@ -84,13 +90,21 @@ public sealed class FixtureGameClockReader : IGameClockReader
                     null,
                     0,
                     ClockReadingStatus.Implausible,
-                    $"Clock advanced implausibly from {Format(_lastGameTime.Value)} to {Format(gameTime)}."));
+                    $"Clock advanced implausibly from {Format(_lastGameTime.Value)} to {Format(gameTime)}.",
+                    sourceFrameSequence: clockFrame.SourceFrameSequence,
+                    sourceTimestamp: clockFrame.SourceTimestamp));
             }
         }
 
         _lastGameTime = gameTime;
         _lastSourceTimestamp = clockFrame.SourceTimestamp;
-        return ValueTask.FromResult(new ClockReading(gameTime, 1, ClockReadingStatus.Valid));
+        return ValueTask.FromResult(new ClockReading(
+            gameTime,
+            1,
+            ClockReadingStatus.Valid,
+            temporalStatus: ClockTemporalStatus.Accepted,
+            sourceFrameSequence: clockFrame.SourceFrameSequence,
+            sourceTimestamp: clockFrame.SourceTimestamp));
     }
 
     private static bool TryParseClock(string? text, out TimeSpan gameTime)

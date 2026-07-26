@@ -104,6 +104,34 @@ Discovery and processing are relative-path sorted and emit correct accepts/rejec
 
 Normal structured logs cover enable/disable, profile/speed selection, worker lifecycle, rejection category/reason, discontinuity/regression, profile failures, and diagnostic writes. Accepted high-frequency candidates are debug-level.
 
+## Minimap validation, observation, and storage
+
+`LeagueScreenAnalyzer.Core` owns platform-neutral `MapImage`, feature/profile/results, observation, gap, cadence configuration, manifest, and summary records. It remains independent of WPF, WinRT, Direct3D, filesystem implementations, and presentation bitmaps.
+
+`MinimapFeatureExtractor` computes deterministic geometry, luminance, information, edge, border, and corner statistics. `StructuralMinimapValidator` is history-free and maps only those values through a validated `MinimapValidationProfile`. Required missing evidence is `Unknown`; shape, black coverage, information, structure, and confidence failures remain distinct. A result cannot be valid without profile identity and complete feature evidence. The initial `league-replay-minimap-v1` profile is explicitly synthetic/calibration-oriented.
+
+`MinimapProfileCatalog` is shared by WPF and CLI. It validates and stable-ID sorts built-in, executable-relative packaged, user-installed, and explicit development profiles. Repository walking is only a development fallback when packaged assets are absent. Conflicts and malformed manifests remain catalog errors rather than fallback opportunities.
+
+`SemanticRegionShapePolicy` is the single source-space constraint boundary used by `RegionEditor` and recognition/validation guards. A minimap is square in source pixels even though its normalized width and height differ on a widescreen source. Corner and edge resize preserve that square, minimum size and clamping do not invert it, and moves preserve its size. Legacy deviations up to 2.5% normalize around the center while material deviations remain visible and warned. Clock regions enforce a configurable minimum 2:1 pixel ratio without forcing one exact HUD shape. Invalid semantic geometry stops the corresponding analyzer before visual classification.
+
+```text
+owned MINIMAP crop
+  -> MinimapValidationWorker (one replaceable pending item)
+  -> deterministic features and profile decision
+  -> bounded sequence/timestamp evidence join with ClockReading
+  -> ObservationPolicy
+  -> game-time ObservationCadence
+  -> lossless map frame and portable session dataset
+```
+
+The worker uses the same empty-to-occupied semaphore invariant as clock recognition: replacement does not signal and every replaced/rejected/processed sample is disposed exactly once. Clock and map completion order does not alter policy. The app retains at most 16 results of each type and joins only identical source sequences and timestamps. Eviction can lose recall but cannot create mismatched evidence.
+
+`ObservationPolicy` requires clock `Valid` plus temporal `Accepted`, map `Valid`, and exact full-frame/region/result identity. It never uses `LastAcceptedGameTime` as current evidence. `ReplayContinuous` treats unavailable evidence as a gap and warns on long anchored gaps without seek recovery. `BroadcastVod` preserves the later disappearance/gap seam but has no broadcaster replay-window classifier.
+
+`ObservationCadence` buckets canonical game ticks and keeps the highest-confidence candidate per requested interval. `GapDetector` anchors only on valid observations, retains ordered distinct reasons, avoids zero/inverted intervals, and leaves start/end unavailability as partial coverage. `SessionDatasetRecorder` writes selected maps as top-down lossless BGRA BMP and atomically finalizes manifest, JSONL timeline, summary, and gaps. No interpolation or database blob exists.
+
+Explicit minimap diagnostic labels are independent ground truth. Profile construction requires labeled valid samples, records class counts in provenance, and calibration requires both valid and invalid classes. Evaluation excludes uncertain/unlabeled evidence from primary TP/TN/FP/FN and reports precision, recall, feature distributions, rejection reasons, and per-sample evidence, emphasizing false positives.
+
 ## Testing and manual boundary
 
 Deterministic tests cover manual label formats/normalization/errors, labeled and explicitly unlabeled persistence, diagnostic-bundle evaluator discovery, recognition parsers, image dimensions/polarity/segmentation/templates/separator/confidence/ambiguity, no-character and low-contrast images, all temporal transitions and required speeds, non-fabrication/history semantics, latest-sample replacement, immutable running settings, diagnostics, profile/layout loading, evaluator metrics, and all earlier capture/editor fixtures.
@@ -112,8 +140,8 @@ Platform capture, visual WPF state distinction, several-minute real replay recog
 
 ## Known limitations
 
-The initial segmentation assumes separable x-runs and the initial masks are not League-derived. Real antialiasing, scale, shadows, compression, and background variation remain unmeasured. Broadcast-VOD gap anchoring, minimap validation, automatic region discovery, OCR fallback, replay control, and persistent live timelines are intentionally absent.
+Clock segmentation assumes separable x-runs. Minimap thresholds are synthetic calibration and real replay precision remains unmeasured; coarse border/corner statistics are not landmark/reference matching. Broadcast classification, automatic region discovery, OCR fallback, replay control, player/icon detection, coordinate inference, and heatmaps remain absent. Timeline metadata is memory-retained until atomic stop, while processing queues and image candidates remain bounded.
 
 ## Next milestone
 
-Validate configured MINIMAP visibility, emit timestamped valid minimap observations, and create explicit unavailable intervals when the clock or minimap cannot be trusted.
+Consume saved timestamped minimap observations and detect a first limited set of map points of interest, while preserving confidence and provenance.

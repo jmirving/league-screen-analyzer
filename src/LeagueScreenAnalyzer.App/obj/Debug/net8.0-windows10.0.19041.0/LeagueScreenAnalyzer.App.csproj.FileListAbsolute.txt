@@ -211,6 +211,13 @@ C:\Users\Owner\projects\lol\league-screen-analyzer\src\LeagueScreenAnalyzer.App\
 C:\Users\Owner\projects\lol\league-screen-analyzer\src\LeagueScreenAnalyzer.App\bin\Debug\net8.0-windows10.0.19041.0\fixtures\clocks\synthetic-seven-segment\manifest.json
 C:\Users\Owner\projects\lol\league-screen-analyzer\src\LeagueScreenAnalyzer.App\bin\Debug\net8.0-windows10.0.19041.0\fixtures\clocks\synthetic-seven-segment\missing.pgm
 C:\Users\Owner\projects\lol\league-screen-analyzer\src\LeagueScreenAnalyzer.App\bin\Debug\net8.0-windows10.0.19041.0\fixtures\clocks\synthetic-seven-segment\README.md
+C:\Users\Owner\projects\lol\league-screen-analyzer\src\LeagueScreenAnalyzer.App\bin\Debug\net8.0-windows10.0.19041.0\fixtures\minimaps\diagnostics\black-missing\result.json
+C:\Users\Owner\projects\lol\league-screen-analyzer\src\LeagueScreenAnalyzer.App\bin\Debug\net8.0-windows10.0.19041.0\fixtures\minimaps\diagnostics\menu-overlay\result.json
+C:\Users\Owner\projects\lol\league-screen-analyzer\src\LeagueScreenAnalyzer.App\bin\Debug\net8.0-windows10.0.19041.0\fixtures\minimaps\diagnostics\uncertain-low-information\result.json
+C:\Users\Owner\projects\lol\league-screen-analyzer\src\LeagueScreenAnalyzer.App\bin\Debug\net8.0-windows10.0.19041.0\fixtures\minimaps\diagnostics\valid-replay\result.json
+C:\Users\Owner\projects\lol\league-screen-analyzer\src\LeagueScreenAnalyzer.App\bin\Debug\net8.0-windows10.0.19041.0\fixtures\minimaps\league-replay-minimap-v1\profile.json
+C:\Users\Owner\projects\lol\league-screen-analyzer\src\LeagueScreenAnalyzer.App\bin\Debug\net8.0-windows10.0.19041.0\fixtures\minimaps\README.md
+C:\Users\Owner\projects\lol\league-screen-analyzer\src\LeagueScreenAnalyzer.App\bin\Debug\net8.0-windows10.0.19041.0\fixtures\minimaps\synthetic-gap-sequence\session.json
 C:\Users\Owner\projects\lol\league-screen-analyzer\src\LeagueScreenAnalyzer.App\bin\Debug\net8.0-windows10.0.19041.0\LeagueScreenAnalyzer.App.exe
 C:\Users\Owner\projects\lol\league-screen-analyzer\src\LeagueScreenAnalyzer.App\bin\Debug\net8.0-windows10.0.19041.0\LeagueScreenAnalyzer.App.deps.json
 C:\Users\Owner\projects\lol\league-screen-analyzer\src\LeagueScreenAnalyzer.App\bin\Debug\net8.0-windows10.0.19041.0\LeagueScreenAnalyzer.App.runtimeconfig.json

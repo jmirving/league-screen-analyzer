@@ -39,7 +39,7 @@ public sealed class ClockRecognitionTests
     public async Task Recognizer_RejectsNoCharacterImage()
     {
         ClockRecognitionResult result = await new ConstrainedClockImageRecognizer().RecognizeAsync(
-            ClockTestImages.Solid(12, 7, 0),
+            ClockTestImages.Solid(14, 7, 0),
             BuiltInClockProfiles.Get(BuiltInClockProfiles.LeagueReplayV1Id));
 
         Assert.Equal(ClockReadingStatus.NotVisible, result.Status);

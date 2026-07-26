@@ -46,6 +46,23 @@ public interface IMapFrameValidator
     ValueTask<MapValidationResult> ValidateAsync(RegionFrame minimapFrame, CancellationToken cancellationToken = default);
 }
 
+public interface IMapImageValidator
+{
+    ValueTask<MapValidationResult> ValidateAsync(
+        MapImage minimapImage,
+        CancellationToken cancellationToken = default);
+}
+
+public interface IObservationPolicy
+{
+    TimelineObservation Create(
+        SourceFrame sourceFrame,
+        RegionFrame minimapFrame,
+        ClockReading clockResult,
+        MapValidationResult mapResult,
+        SessionMode mode);
+}
+
 public interface IObservationProcessor
 {
     ValueTask<TimelineObservation> ProcessAsync(

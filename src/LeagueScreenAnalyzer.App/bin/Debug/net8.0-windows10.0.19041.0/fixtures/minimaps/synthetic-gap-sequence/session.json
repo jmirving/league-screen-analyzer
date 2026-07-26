@@ -1,0 +1,24 @@
+{
+  "frames": [
+    {
+      "sequence": 1, "sourceTimeMs": 0, "width": 1920, "height": 1080,
+      "clockText": "18:42", "clockVisible": true, "mapVisible": true
+    },
+    {
+      "sequence": 2, "sourceTimeMs": 1000, "width": 1920, "height": 1080,
+      "clockText": "18:43", "clockVisible": true, "mapVisible": false
+    },
+    {
+      "sequence": 3, "sourceTimeMs": 2000, "width": 1920, "height": 1080,
+      "clockText": null, "clockVisible": false, "mapVisible": true
+    },
+    {
+      "sequence": 4, "sourceTimeMs": 3000, "width": 1920, "height": 1080,
+      "clockText": null, "clockVisible": false, "mapVisible": false
+    },
+    {
+      "sequence": 5, "sourceTimeMs": 4000, "width": 1920, "height": 1080,
+      "clockText": "18:46", "clockVisible": true, "mapVisible": true
+    }
+  ]
+}

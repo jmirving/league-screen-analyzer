@@ -33,42 +33,9 @@ public sealed class SessionProcessor(
             observations.Add(observation);
         }
 
-        IReadOnlyList<GapInterval> gaps = DetectGaps(observations);
+        IReadOnlyList<GapInterval> gaps = GapDetector.Detect(observations);
         SessionSummary summary = CreateSummary(observations, gaps);
         return new SessionProcessingResult(observations, gaps, summary);
-    }
-
-    private static IReadOnlyList<GapInterval> DetectGaps(IReadOnlyList<TimelineObservation> observations)
-    {
-        List<GapInterval> gaps = [];
-        TimelineObservation? previousValid = null;
-        bool unavailableSinceAnchor = false;
-
-        foreach (TimelineObservation observation in observations)
-        {
-            if (observation.Status == ObservationStatus.Unavailable)
-            {
-                if (previousValid is not null)
-                {
-                    unavailableSinceAnchor = true;
-                }
-
-                continue;
-            }
-
-            if (unavailableSinceAnchor &&
-                previousValid?.GameTime is TimeSpan start &&
-                observation.GameTime is TimeSpan end &&
-                end > start)
-            {
-                gaps.Add(new GapInterval(start, end, "One or more source frames were unavailable."));
-            }
-
-            previousValid = observation;
-            unavailableSinceAnchor = false;
-        }
-
-        return gaps;
     }
 
     private static SessionSummary CreateSummary(

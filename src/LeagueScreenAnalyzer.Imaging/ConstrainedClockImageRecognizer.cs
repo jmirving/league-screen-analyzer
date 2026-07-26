@@ -1,5 +1,6 @@
 using LeagueScreenAnalyzer.Core.Abstractions;
 using LeagueScreenAnalyzer.Core.Models;
+using LeagueScreenAnalyzer.Core.Regions;
 
 namespace LeagueScreenAnalyzer.Imaging;
 
@@ -23,6 +24,26 @@ public sealed class ConstrainedClockImageRecognizer : IClockImageRecognizer
         image.Validate();
         profile.Validate();
         cancellationToken.ThrowIfCancellationRequested();
+
+        RegionGeometryValidation geometry = new SemanticRegionShapePolicy().Validate(
+            RegionType.Clock,
+            new NormalizedRegion(0, 0, 1, 1),
+            new RegionSourceSize(image.Width, image.Height));
+        if (!geometry.IsValid)
+        {
+            return ValueTask.FromResult(new ClockRecognitionResult(
+                [],
+                ClockReadingStatus.NotConfigured,
+                0,
+                geometry.Error,
+                new ClockRecognitionDiagnostics(
+                    image.Width,
+                    image.Height,
+                    [],
+                    [],
+                    "Geometry",
+                    geometry.Error)));
+        }
 
         byte[] luminance = ToLuminance(image);
         (byte minimum, byte maximum) = FindRange(luminance);

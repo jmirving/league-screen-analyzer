@@ -31,8 +31,14 @@ public enum ClockTemporalStatus
 public enum MapFrameStatus
 {
     Valid,
+    NotConfigured,
     Missing,
-    Obscured
+    Obscured,
+    Misaligned,
+    LowInformation,
+    LowConfidence,
+    IncompatibleGeometry,
+    Unknown
 }
 
 public enum ObservationStatus
@@ -132,7 +138,11 @@ public sealed record MapValidationResult
     public MapValidationResult(
         MapFrameStatus status,
         double confidence,
-        IReadOnlyList<string> reasons)
+        IReadOnlyList<string> reasons,
+        string? profileId = null,
+        MapFeatureValues? features = null,
+        long? sourceFrameSequence = null,
+        TimeSpan? sourceTimestamp = null)
     {
         if (!Enum.IsDefined(status))
         {
@@ -147,6 +157,18 @@ public sealed record MapValidationResult
         Status = status;
         Confidence = confidence;
         Reasons = reasons?.ToArray() ?? throw new ArgumentNullException(nameof(reasons));
+        ProfileId = profileId;
+        Features = features;
+        SourceFrameSequence = sourceFrameSequence;
+        SourceTimestamp = sourceTimestamp;
+
+        if (status == MapFrameStatus.Valid &&
+            (string.IsNullOrWhiteSpace(profileId) || features is null))
+        {
+            throw new ArgumentException(
+                "A valid minimap result requires a profile ID and complete feature values.",
+                nameof(status));
+        }
     }
 
     public MapFrameStatus Status { get; }
@@ -154,6 +176,14 @@ public sealed record MapValidationResult
     public double Confidence { get; }
 
     public IReadOnlyList<string> Reasons { get; }
+
+    public string? ProfileId { get; }
+
+    public MapFeatureValues? Features { get; }
+
+    public long? SourceFrameSequence { get; }
+
+    public TimeSpan? SourceTimestamp { get; }
 }
 
 public sealed record TimelineObservation
@@ -164,7 +194,9 @@ public sealed record TimelineObservation
         ObservationStatus status,
         ClockReading clockResult,
         MapValidationResult mapResult,
-        string? mapArtifactPath = null)
+        string? mapArtifactPath = null,
+        long? sourceFrameSequence = null,
+        string? unavailabilityReason = null)
     {
         if (sourceTimestamp < TimeSpan.Zero)
         {
@@ -198,12 +230,26 @@ public sealed record TimelineObservation
                 nameof(gameTime));
         }
 
+        if (status == ObservationStatus.Valid &&
+            (sourceFrameSequence is null ||
+             clockResult.SourceFrameSequence != sourceFrameSequence ||
+             mapResult.SourceFrameSequence != sourceFrameSequence))
+        {
+            throw new ArgumentException(
+                "A valid observation requires clock and minimap evidence from the same source frame.",
+                nameof(sourceFrameSequence));
+        }
+
         SourceTimestamp = sourceTimestamp;
         GameTime = gameTime;
         Status = status;
         ClockResult = clockResult;
         MapResult = mapResult;
         MapArtifactPath = mapArtifactPath;
+        SourceFrameSequence = sourceFrameSequence;
+        UnavailabilityReason = status == ObservationStatus.Unavailable
+            ? unavailabilityReason ?? "clock-or-minimap-unavailable"
+            : null;
     }
 
     public TimeSpan SourceTimestamp { get; }
@@ -217,6 +263,10 @@ public sealed record TimelineObservation
     public MapValidationResult MapResult { get; }
 
     public string? MapArtifactPath { get; }
+
+    public long? SourceFrameSequence { get; }
+
+    public string? UnavailabilityReason { get; }
 }
 
 public sealed record GapInterval

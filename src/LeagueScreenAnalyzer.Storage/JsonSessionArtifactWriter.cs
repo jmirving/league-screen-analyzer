@@ -53,5 +53,13 @@ public sealed class JsonSessionArtifactWriter : ISessionArtifactWriter
             result.Summary,
             SummarySerializerOptions,
             cancellationToken).ConfigureAwait(false);
+
+        string gapsPath = Path.Combine(_outputDirectory, "gaps.json");
+        await using FileStream gapsStream = File.Create(gapsPath);
+        await JsonSerializer.SerializeAsync(
+            gapsStream,
+            result.Gaps,
+            SummarySerializerOptions,
+            cancellationToken).ConfigureAwait(false);
     }
 }

@@ -64,8 +64,8 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
-                <RowDefinition Height="5*" />
-                <RowDefinition Height="*" />
+                <RowDefinition Height="5*" MinHeight="180" />
+                <RowDefinition Height="2*" MinHeight="240" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
@@ -84,6 +84,7 @@
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
@@ -148,13 +149,16 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
                     <GroupBox x:Name="RegionsGroup"
                               Grid.Row="1"
-                              Header="Regions"
                               Padding="10"
                               Margin="0,12,0,0">
+                        <GroupBox.Header>
+                            <TextBlock x:Name="RegionsGroupTitle" Text="Regions" />
+                        </GroupBox.Header>
                         <StackPanel>
                             <TextBlock FontWeight="SemiBold" Text="{Binding EditMode}" />
                             <TextBlock Margin="0,3,0,10" Foreground="DimGray"
@@ -170,7 +174,8 @@
                                     <TextBlock FontFamily="Consolas" FontSize="11"
                                                Text="{Binding ClockCoordinates}" />
                                 </StackPanel>
-                                <Button Grid.Column="1" Margin="6,0" Padding="10,4"
+                                <Button x:Name="EditClockRegionButton"
+                                        Grid.Column="1" Margin="6,0" Padding="10,4"
                                         Command="{Binding EditClockCommand}" Content="Edit" />
                                 <Button Grid.Column="2" Padding="10,4"
                                         Command="{Binding ClearClockCommand}" Content="Clear" />
@@ -186,7 +191,8 @@
                                     <TextBlock FontFamily="Consolas" FontSize="11"
                                                Text="{Binding MinimapCoordinates}" />
                                 </StackPanel>
-                                <Button Grid.Column="1" Margin="6,0" Padding="10,4"
+                                <Button x:Name="EditMinimapRegionButton"
+                                        Grid.Column="1" Margin="6,0" Padding="10,4"
                                         Command="{Binding EditMinimapCommand}" Content="Edit" />
                                 <Button Grid.Column="2" Padding="10,4"
                                         Command="{Binding ClearMinimapCommand}" Content="Clear" />
@@ -198,9 +204,11 @@
 
                     <GroupBox x:Name="LayoutsGroup"
                               Grid.Row="2"
-                              Header="Layouts"
                               Padding="10"
                               Margin="0,12,0,0">
+                        <GroupBox.Header>
+                            <TextBlock x:Name="LayoutsGroupTitle" Text="Layouts" />
+                        </GroupBox.Header>
                         <StackPanel>
                             <ComboBox ItemsSource="{Binding AvailableSavedLayouts}"
                                       SelectedItem="{Binding SelectedSavedLayout}"
@@ -221,11 +229,152 @@
                         </StackPanel>
                     </GroupBox>
 
+                    <GroupBox x:Name="MinimapValidationGroup"
+                              Grid.Row="3"
+                              Padding="10"
+                              Margin="0,12,0,0"
+                              AutomationProperties.Name="Minimap Validation and Session Recording">
+                        <GroupBox.Header>
+                            <TextBlock x:Name="MinimapValidationGroupTitle"
+                                       Text="Minimap Validation and Session Recording" />
+                        </GroupBox.Header>
+                        <StackPanel>
+                            <CheckBox x:Name="MinimapValidationEnabledToggle"
+                                      IsChecked="{Binding MinimapValidationEnabled}"
+                                      IsEnabled="{Binding CanConfigureMinimap}"
+                                      Content="Enable validation" />
+                            <TextBlock x:Name="MinimapProfileLabel"
+                                       Margin="0,8,0,2" FontWeight="SemiBold"
+                                       Text="Minimap profile" />
+                            <ComboBox x:Name="MinimapProfileSelector"
+                                      ItemsSource="{Binding AvailableMinimapProfiles}"
+                                      DisplayMemberPath="UiLabel"
+                                      SelectedValuePath="Id"
+                                      SelectedValue="{Binding MinimapProfileId}"
+                                      IsEnabled="{Binding CanConfigureMinimap}"
+                                      AutomationProperties.Name="Minimap profile" />
+                            <TextBlock x:Name="SelectedMinimapProfileIdText"
+                                       Margin="0,4,0,0" Foreground="DimGray"
+                                       FontFamily="Consolas" TextWrapping="Wrap">
+                                <Run Text="ID: " />
+                                <Run FontWeight="Bold" Text="{Binding MinimapProfileId, Mode=OneWay}" />
+                                <Run Text="  Version: " />
+                                <Run Text="{Binding MinimapProfileVersion, Mode=OneWay}" />
+                                <Run Text="  Calibration: " />
+                                <Run Text="{Binding MinimapCalibrationStatus, Mode=OneWay}" />
+                                <Run Text="  Active: " />
+                                <Run FontWeight="Bold" Text="{Binding ActiveMinimapProfileId, Mode=OneWay}" />
+                            </TextBlock>
+                            <TextBlock x:Name="MinimapProfileSourceText"
+                                       Margin="0,3,0,0" Foreground="DimGray"
+                                       FontFamily="Consolas" FontSize="10" TextWrapping="Wrap"
+                                       Text="{Binding MinimapProfileSource}" />
+                            <TextBlock x:Name="MinimapProfileWarningText"
+                                       Margin="0,3,0,0" Foreground="#FFB91C1C"
+                                       FontWeight="SemiBold" TextWrapping="Wrap"
+                                       Text="{Binding MinimapProfileWarning}" />
+                            <Border x:Name="MinimapValidationStatusPanel"
+                                    Margin="0,8,0,0" Padding="8"
+                                    Background="#FFF3F4F6" CornerRadius="3">
+                                <StackPanel>
+                                    <TextBlock>
+                                        <Run FontWeight="SemiBold" Text="Status: " />
+                                        <Run FontWeight="Bold" Text="{Binding MinimapStatus, Mode=OneWay}" />
+                                        <Run Text="  Confidence: " />
+                                        <Run Text="{Binding MinimapConfidence, Mode=OneWay}" />
+                                    </TextBlock>
+                                    <TextBlock Margin="0,3,0,0" TextWrapping="Wrap"
+                                               FontFamily="Consolas" FontSize="11"
+                                               Text="{Binding MinimapFeatures}" />
+                                    <TextBlock Margin="0,3,0,0" TextWrapping="Wrap"
+                                               Foreground="DimGray" Text="{Binding MinimapReason}" />
+                                </StackPanel>
+                            </Border>
+                            <TextBlock x:Name="MinimapSampleLabel"
+                                       Margin="0,9,0,2" FontWeight="SemiBold"
+                                       Text="Explicit sample label" />
+                            <ComboBox ItemsSource="{Binding MinimapLabels}"
+                                      SelectedItem="{Binding SelectedMinimapLabel}"
+                                      AutomationProperties.Name="Minimap sample label" />
+                            <CheckBox Margin="0,6,0,0"
+                                      IsChecked="{Binding SaveUnlabeledMinimapSample}"
+                                      Content="Explicit unlabeled diagnostic mode" />
+                            <WrapPanel Margin="0,7,0,0">
+                                <Button x:Name="SaveMinimapSampleButton"
+                                        Margin="0,0,6,6" Padding="10,4"
+                                        Command="{Binding SaveMinimapSampleCommand}"
+                                        Content="Save Labeled Minimap Sample" />
+                                <Button x:Name="SaveMinimapDiagnosticButton"
+                                        Margin="0,0,0,6" Padding="10,4"
+                                        Command="{Binding SaveMinimapDiagnosticCommand}"
+                                        Content="Save Minimap Diagnostic" />
+                            </WrapPanel>
+                            <TextBlock Margin="0,10,0,2" FontWeight="SemiBold" Text="Session mode" />
+                            <ComboBox ItemsSource="{Binding SessionModes}"
+                                      SelectedItem="{Binding SelectedSessionMode}"
+                                      IsEnabled="{Binding CanConfigureMinimap}" />
+                            <TextBlock Margin="0,7,0,2" FontWeight="SemiBold"
+                                       Text="Game-time cadence (milliseconds)" />
+                            <ComboBox ItemsSource="{Binding ObservationCadencesMilliseconds}"
+                                      SelectedItem="{Binding ObservationCadenceMilliseconds}"
+                                      IsEnabled="{Binding CanConfigureMinimap}" />
+                            <WrapPanel Margin="0,8,0,0">
+                                <Button x:Name="StartSessionRecordingButton"
+                                        Margin="0,0,6,6" Padding="10,4"
+                                        Command="{Binding StartSessionRecordingCommand}"
+                                        Content="Start Session Recording" />
+                                <Button x:Name="StopSessionRecordingButton"
+                                        Margin="0,0,6,6" Padding="10,4"
+                                        Command="{Binding StopSessionRecordingCommand}"
+                                        Content="Stop" />
+                                <Button x:Name="OpenSessionFolderButton"
+                                        Margin="0,0,0,6" Padding="10,4"
+                                        Command="{Binding OpenSessionFolderCommand}"
+                                        Content="Open Folder" />
+                            </WrapPanel>
+                            <TextBlock Margin="0,2,0,0" TextWrapping="Wrap">
+                                <Run FontWeight="SemiBold" Text="Recording: " />
+                                <Run Text="{Binding RecordingStatus, Mode=OneWay}" />
+                                <Run Text="  Game time: " />
+                                <Run FontFamily="Consolas" Text="{Binding CurrentAcceptedGameTime, Mode=OneWay}" />
+                            </TextBlock>
+                            <TextBlock Margin="0,3,0,0" TextWrapping="Wrap">
+                                <Run Text="Valid: " />
+                                <Run Text="{Binding ValidObservationCount, Mode=OneWay}" />
+                                <Run Text="  Unavailable: " />
+                                <Run Text="{Binding UnavailableObservationCount, Mode=OneWay}" />
+                                <Run Text="  Saved frames: " />
+                                <Run Text="{Binding SavedMapFrameCount, Mode=OneWay}" />
+                                <Run Text="  Gaps: " />
+                                <Run Text="{Binding GapCount, Mode=OneWay}" />
+                            </TextBlock>
+                            <TextBlock Margin="0,3,0,0" TextWrapping="Wrap">
+                                <Run Text="First: " />
+                                <Run FontFamily="Consolas" Text="{Binding FirstAcceptedGameTime, Mode=OneWay}" />
+                                <Run Text="  Last: " />
+                                <Run FontFamily="Consolas" Text="{Binding LastAcceptedGameTime, Mode=OneWay}" />
+                            </TextBlock>
+                            <TextBlock Margin="0,3,0,0" TextWrapping="Wrap">
+                                <Run Text="Achieved game-time resolution: " />
+                                <Run Text="{Binding AchievedGameTimeResolution, Mode=OneWay}" />
+                            </TextBlock>
+                            <TextBlock Margin="0,3,0,0" TextWrapping="Wrap"
+                                       FontFamily="Consolas" FontSize="10"
+                                       Text="{Binding SessionOutputPath}" />
+                            <TextBlock Margin="0,5,0,0" Foreground="#FFB45309"
+                                       FontWeight="SemiBold" TextWrapping="Wrap"
+                                       Text="{Binding SessionWarning}" />
+                        </StackPanel>
+                    </GroupBox>
+
                     <GroupBox x:Name="ClockRecognitionGroup"
                               Grid.Row="0"
-                              Header="Clock Recognition"
                               Padding="7"
                               AutomationProperties.Name="Clock Recognition">
+                        <GroupBox.Header>
+                            <TextBlock x:Name="ClockRecognitionGroupTitle"
+                                       Text="Clock Recognition" />
+                        </GroupBox.Header>
                         <StackPanel>
                             <CheckBox x:Name="RecognitionEnabledToggle"
                                       IsChecked="{Binding RecognitionEnabled}"
@@ -377,7 +526,10 @@
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
-                        <local:CropPreviewControl ImageSource="{Binding ClockCrop.Image}" />
+                        <local:AspectRatioDecorator AspectRatio="3.2">
+                            <local:CropPreviewControl x:Name="ClockCropPreview"
+                                                      ImageSource="{Binding ClockCrop.Image}" />
+                        </local:AspectRatioDecorator>
                         <TextBlock Grid.Row="1" Margin="0,5,0,0"
                                    Text="{Binding ClockCrop.Dimensions}" />
                         <TextBlock Grid.Row="2" FontFamily="Consolas"
@@ -391,7 +543,10 @@
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
-                        <local:CropPreviewControl ImageSource="{Binding MinimapCrop.Image}" />
+                        <local:AspectRatioDecorator AspectRatio="1">
+                            <local:CropPreviewControl x:Name="MinimapCropPreview"
+                                                      ImageSource="{Binding MinimapCrop.Image}" />
+                        </local:AspectRatioDecorator>
                         <TextBlock Grid.Row="1" Margin="0,5,0,0"
                                    Text="{Binding MinimapCrop.Dimensions}" />
                         <TextBlock Grid.Row="2" FontFamily="Consolas"

@@ -8,6 +8,40 @@ public static class Program
     {
         try
         {
+            if (args.FirstOrDefault() == "analyze-minimap-diagnostics")
+            {
+                Dictionary<string, string> values = ParseNamedArguments(args.Skip(1).ToArray());
+                MinimapAnalysisReport report = await new MinimapCalibrationService().AnalyzeAsync(
+                    Required(values, "--diagnostics"),
+                    Required(values, "--output")).ConfigureAwait(false);
+                Console.WriteLine($"Minimap analysis: {report.TotalSamples} samples.");
+                return 0;
+            }
+
+            if (args.FirstOrDefault() == "build-minimap-profile")
+            {
+                Dictionary<string, string> values = ParseNamedArguments(args.Skip(1).ToArray());
+                var profile = await new MinimapCalibrationService().BuildProfileAsync(
+                    Required(values, "--profile-id"),
+                    Required(values, "--diagnostics"),
+                    Required(values, "--output-profile")).ConfigureAwait(false);
+                Console.WriteLine($"Built minimap profile {profile.Id}: {profile.Provenance}");
+                return 0;
+            }
+
+            if (args.FirstOrDefault() == "evaluate-minimap")
+            {
+                Dictionary<string, string> values = ParseNamedArguments(args.Skip(1).ToArray());
+                MinimapEvaluationReport report = await new MinimapCalibrationService().EvaluateAsync(
+                    Required(values, "--profile"),
+                    Required(values, "--diagnostics"),
+                    Required(values, "--output")).ConfigureAwait(false);
+                Console.WriteLine(
+                    $"Minimap evaluation: {report.TotalLabeledSamples} labeled, " +
+                    $"{report.FalsePositives} false positives, precision {report.Precision:P2}.");
+                return report.FalsePositives == 0 ? 0 : 1;
+            }
+
             if (args.FirstOrDefault() == "analyze-clock-diagnostics")
             {
                 Dictionary<string, string> values = ParseNamedArguments(args.Skip(1).ToArray());
@@ -83,7 +117,10 @@ public static class Program
                 "  analyze-clock-diagnostics --profile <id> --diagnostics <directory> --output <directory>\n" +
                 "  build-clock-profile --base-profile <id> --profile-id <id> --diagnostics <directory> --output-profile <directory>\n" +
                 "  evaluate-clock --profile <id> --manifest <manifest.json> --output <directory>\n" +
-                "  evaluate-clock --profile <id> --diagnostics <clock-samples-directory> --output <directory>");
+                "  evaluate-clock --profile <id> --diagnostics <clock-samples-directory> --output <directory>\n" +
+                "  analyze-minimap-diagnostics --diagnostics <directory> --output <directory>\n" +
+                "  build-minimap-profile --profile-id <id> --diagnostics <directory> --output-profile <directory>\n" +
+                "  evaluate-minimap --profile <id-or-path> --diagnostics <directory> --output <directory>");
             return 2;
         }
         catch (Exception exception)

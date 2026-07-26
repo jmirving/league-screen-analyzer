@@ -12,6 +12,9 @@
     <Content Include="..\..\fixtures\clocks\**\*"
              Link="fixtures\clocks\%(RecursiveDir)%(Filename)%(Extension)"
              CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\fixtures\minimaps\**\*"
+             Link="fixtures\minimaps\%(RecursiveDir)%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <PropertyGroup>

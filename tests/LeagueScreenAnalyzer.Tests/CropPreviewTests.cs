@@ -60,6 +60,57 @@ public sealed class CropPreviewTests
             Assert.Equal(407, afterSourceResize.PixelHeight);
         });
 
+    [Fact]
+    public void SemanticPreviewViewports_AreNonOverlappingResponsiveAndAspectAware() =>
+        RunOnSta(() =>
+        {
+            MainWindow window = new()
+            {
+                Width = 1280,
+                Height = 900,
+                WindowStartupLocation = WindowStartupLocation.Manual,
+                Left = 0,
+                Top = 0,
+                ShowActivated = false
+            };
+            try
+            {
+                window.Show();
+                window.UpdateLayout();
+                CropPreviewControl clock =
+                    Assert.IsType<CropPreviewControl>(window.FindName("ClockCropPreview"));
+                CropPreviewControl minimap =
+                    Assert.IsType<CropPreviewControl>(window.FindName("MinimapCropPreview"));
+                Size initialClock = clock.RenderSize;
+                Size initialMinimap = minimap.RenderSize;
+
+                Assert.True(initialMinimap.Height >= 150);
+                Assert.Equal(1, initialMinimap.Width / initialMinimap.Height, 2);
+                Assert.Equal(3.2, initialClock.Width / initialClock.Height, 1);
+                Assert.False(Bounds(clock, window).IntersectsWith(Bounds(minimap, window)));
+
+                window.Width = 960;
+                window.Height = 700;
+                window.UpdateLayout();
+                Size shrunkClock = clock.RenderSize;
+                Size shrunkMinimap = minimap.RenderSize;
+                Assert.Equal(1, shrunkMinimap.Width / shrunkMinimap.Height, 2);
+                Assert.Equal(3.2, shrunkClock.Width / shrunkClock.Height, 1);
+
+                window.Width = 1280;
+                window.Height = 900;
+                window.UpdateLayout();
+                Assert.True(clock.ActualWidth >= shrunkClock.Width);
+                Assert.True(minimap.ActualHeight >= shrunkMinimap.Height);
+                Assert.Equal(initialClock.Width, clock.ActualWidth, 1);
+                Assert.Equal(initialMinimap.Height, minimap.ActualHeight, 1);
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+
     private static Size ArrangeAndGetRenderedImageSize(
         CropPreviewControl preview,
         double width,
@@ -97,6 +148,10 @@ public sealed class CropPreviewTests
 
     private static WriteableBitmap CreateBitmap(int width, int height) =>
         new(width, height, 96, 96, PixelFormats.Bgra32, null);
+
+    private static Rect Bounds(FrameworkElement element, FrameworkElement ancestor) =>
+        element.TransformToAncestor(ancestor)
+            .TransformBounds(new Rect(element.RenderSize));
 
     private static void RunOnSta(Action action)
     {

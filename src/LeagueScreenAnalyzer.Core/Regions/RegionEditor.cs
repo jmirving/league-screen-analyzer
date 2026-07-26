@@ -32,6 +32,8 @@ public sealed class RegionEditor
 {
     private readonly double _minimumWidth;
     private readonly double _minimumHeight;
+    private readonly IRegionShapePolicy _shapePolicy;
+    private RegionSourceSize _sourceSize;
     private NormalizedRegion? _clock;
     private NormalizedRegion? _minimap;
     private NormalizedRegion? _savedClock;
@@ -41,7 +43,11 @@ public sealed class RegionEditor
     private RegionType? _editingType;
     private ResizeHandle? _resizeHandle;
 
-    public RegionEditor(double minimumWidth = 0.01, double minimumHeight = 0.01)
+    public RegionEditor(
+        double minimumWidth = 0.01,
+        double minimumHeight = 0.01,
+        IRegionShapePolicy? shapePolicy = null,
+        RegionSourceSize? sourceSize = null)
     {
         if (!double.IsFinite(minimumWidth) || minimumWidth <= 0 || minimumWidth > 1)
         {
@@ -55,6 +61,8 @@ public sealed class RegionEditor
 
         _minimumWidth = minimumWidth;
         _minimumHeight = minimumHeight;
+        _shapePolicy = shapePolicy ?? new SemanticRegionShapePolicy();
+        _sourceSize = (sourceSize ?? RegionSourceSize.Unit).Validate();
     }
 
     public RegionEditOperation Operation { get; private set; }
@@ -63,8 +71,25 @@ public sealed class RegionEditor
 
     public bool HasUnsavedChanges => _clock != _savedClock || _minimap != _savedMinimap;
 
+    public RegionSourceSize SourceSize => _sourceSize;
+
+    public IReadOnlyList<string> SetSourceSize(RegionSourceSize sourceSize)
+    {
+        EnsureNotEditing();
+        _sourceSize = sourceSize.Validate();
+        List<string> warnings = [];
+        Reconcile(RegionType.Clock, ref _clock, warnings);
+        Reconcile(RegionType.Minimap, ref _minimap, warnings);
+        return warnings;
+    }
+
     public NormalizedRegion? GetRegion(RegionType type) =>
         type == RegionType.Clock ? _clock : _minimap;
+
+    public RegionGeometryValidation? Validate(RegionType type) =>
+        GetRegion(type) is NormalizedRegion region
+            ? _shapePolicy.Validate(type, region, _sourceSize)
+            : null;
 
     public void Select(RegionType? type)
     {
@@ -83,14 +108,23 @@ public sealed class RegionEditor
         SelectedRegionType = region is null && SelectedRegionType == type ? null : type;
     }
 
-    public void Load(NormalizedRegion clock, NormalizedRegion minimap)
+    public IReadOnlyList<string> Load(NormalizedRegion clock, NormalizedRegion minimap)
     {
         EnsureNotEditing();
-        _clock = clock ?? throw new ArgumentNullException(nameof(clock));
-        _minimap = minimap ?? throw new ArgumentNullException(nameof(minimap));
+        ArgumentNullException.ThrowIfNull(clock);
+        ArgumentNullException.ThrowIfNull(minimap);
+        LegacyRegionNormalization clockResult =
+            _shapePolicy.NormalizeLegacy(RegionType.Clock, clock, _sourceSize);
+        LegacyRegionNormalization minimapResult =
+            _shapePolicy.NormalizeLegacy(RegionType.Minimap, minimap, _sourceSize);
+        _clock = clockResult.Region;
+        _minimap = minimapResult.Region;
         _savedClock = clock;
         _savedMinimap = minimap;
         SelectedRegionType = null;
+        return new[] { clockResult.Warning, minimapResult.Warning }
+            .OfType<string>()
+            .ToArray();
     }
 
     public void MarkSaved()
@@ -104,7 +138,12 @@ public sealed class RegionEditor
     {
         ValidatePoint(start);
         Begin(type, RegionEditOperation.Create, start, null);
-        Set(type, CreateRegion(start, start));
+        Set(
+            type,
+            _shapePolicy.ConstrainCreate(
+                type,
+                CreateRegion(start, start),
+                _sourceSize));
     }
 
     public void BeginMove(RegionType type, NormalizedPoint start)
@@ -131,9 +170,17 @@ public sealed class RegionEditor
 
         NormalizedRegion updated = Operation switch
         {
-            RegionEditOperation.Create => CreateRegion(_dragStart, point),
+            RegionEditOperation.Create => _shapePolicy.ConstrainCreate(
+                type,
+                CreateRegion(_dragStart, point),
+                _sourceSize),
             RegionEditOperation.Move => MoveRegion(_beforeEdit!, point.X - _dragStart.X, point.Y - _dragStart.Y),
-            RegionEditOperation.Resize => ResizeRegion(_beforeEdit!, _resizeHandle!.Value, point),
+            RegionEditOperation.Resize => _shapePolicy.ConstrainResize(
+                type,
+                _beforeEdit!,
+                ResizeRegion(_beforeEdit!, _resizeHandle!.Value, point),
+                _resizeHandle!.Value,
+                _sourceSize),
             _ => throw new InvalidOperationException()
         };
         Set(type, updated);
@@ -288,6 +335,25 @@ public sealed class RegionEditor
         _editingType = null;
         _resizeHandle = null;
         _beforeEdit = null;
+    }
+
+    private void Reconcile(
+        RegionType type,
+        ref NormalizedRegion? region,
+        ICollection<string> warnings)
+    {
+        if (region is null)
+        {
+            return;
+        }
+
+        LegacyRegionNormalization result =
+            _shapePolicy.NormalizeLegacy(type, region, _sourceSize);
+        region = result.Region;
+        if (result.Warning is not null)
+        {
+            warnings.Add(result.Warning);
+        }
     }
 
     private void EnsureNotEditing()

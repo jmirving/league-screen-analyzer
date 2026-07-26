@@ -220,5 +220,12 @@
 [assembly: System.Windows.Resources.AssemblyAssociatedContentFileAttribute("manifest.json")]
 [assembly: System.Windows.Resources.AssemblyAssociatedContentFileAttribute("missing.pgm")]
 [assembly: System.Windows.Resources.AssemblyAssociatedContentFileAttribute("readme.md")]
+[assembly: System.Windows.Resources.AssemblyAssociatedContentFileAttribute("result.json")]
+[assembly: System.Windows.Resources.AssemblyAssociatedContentFileAttribute("result.json")]
+[assembly: System.Windows.Resources.AssemblyAssociatedContentFileAttribute("result.json")]
+[assembly: System.Windows.Resources.AssemblyAssociatedContentFileAttribute("result.json")]
+[assembly: System.Windows.Resources.AssemblyAssociatedContentFileAttribute("profile.json")]
+[assembly: System.Windows.Resources.AssemblyAssociatedContentFileAttribute("readme.md")]
+[assembly: System.Windows.Resources.AssemblyAssociatedContentFileAttribute("session.json")]
 
 

@@ -1,5 +1,6 @@
 using LeagueScreenAnalyzer.Core.Abstractions;
 using LeagueScreenAnalyzer.Core.Models;
+using LeagueScreenAnalyzer.Core.Regions;
 
 namespace LeagueScreenAnalyzer.Imaging;
 
@@ -43,6 +44,21 @@ public sealed class GameClockReader(
         {
             throw new InvalidOperationException(
                 $"Clock payload must implement {nameof(IClockImagePayload)}.");
+        }
+
+        RegionGeometryValidation geometry = new SemanticRegionShapePolicy().Validate(
+            RegionType.Clock,
+            new NormalizedRegion(0, 0, 1, 1),
+            new RegionSourceSize(clockFrame.Width, clockFrame.Height));
+        if (!geometry.IsValid)
+        {
+            return new ClockReading(
+                null,
+                0,
+                ClockReadingStatus.NotConfigured,
+                geometry.Error,
+                sourceFrameSequence: clockFrame.SourceFrameSequence,
+                sourceTimestamp: clockFrame.SourceTimestamp);
         }
 
         ClockImage image = new(

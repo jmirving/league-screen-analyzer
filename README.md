@@ -1,6 +1,6 @@
 # League Screen Analyzer
 
-League Screen Analyzer is a Windows-only .NET 8 application that captures a selected window, previews normalized **CLOCK** and **MINIMAP** regions, and performs precision-first recognition of a visible League game clock. Missing or unsupported image evidence is reported as unavailable; temporal expectation never creates a timestamp.
+League Screen Analyzer is a Windows-only .NET 8 application that captures a selected window, recognizes a visible League game clock, validates configured minimap structure, and records same-frame timestamped map observations. Missing evidence is unavailable; temporal history never creates a timestamp or map observation.
 
 ## Requirements
 
@@ -8,7 +8,7 @@ League Screen Analyzer is a Windows-only .NET 8 application that captures a sele
 - Direct3D 11 graphics and an interactive desktop session
 - .NET 8 SDK
 
-No Python, FFmpeg, SQLite, OpenCV, general OCR, replay control, or minimap analysis is used.
+No Python, FFmpeg, SQLite, OpenCV, learned classifier, general OCR, replay control, champion detection, tracking, or heatmap inference is used.
 
 ## Run and configure
 
@@ -151,6 +151,53 @@ Likewise, `--base-profile` selects inherited recognition settings and the prepro
 
 Old labeled samples are intentionally reusable across profile versions. Users do not need to edit diagnostic JSON or recapture the same CLOCK image for every new profile. Diagnostic evaluation writes separately labeled apparent-training and leave-one-sample-out reports for every template-backed profile. It resets temporal state for every independent crop and reports visual versus temporal rejection counts.
 
+## Minimap validation and observation recording
+
+The minimap pipeline is precision-first. `IMapImageValidator` is history-free and reports crop geometry/aspect ratio, integer luminance mean/variance/minimum/maximum, near-black and near-uniform fractions, thresholded horizontal/vertical edge density, border consistency, corner consistency, and nullable reference similarity. `StructuralMinimapValidator` applies thresholds stored in a versioned profile. Temporal history never promotes invalid pixels, and an unchanged minimap is not rejected.
+
+Map states are `Valid`, `NotConfigured`, `Missing`, `Obscured`, `Misaligned`, `LowInformation`, `LowConfidence`, `IncompatibleGeometry`, and `Unknown`. A valid result requires a profile ID and complete features. `league-replay-minimap-v1` targets `ReplayContinuous`, normalizes diagnostics to 128x128 grayscale, and stores thresholds and provenance in `fixtures/minimaps/league-replay-minimap-v1/profile.json`. It is synthetic structural calibration, not measured real-replay accuracy, so the WPF UI marks its recordings experimental.
+
+CLI and WPF resolve minimap profiles through the same deterministic catalog. Packaged profiles are copied under the executable-relative `fixtures/minimaps` directory, so discovery does not depend on the process working directory; an explicit development override, user-installed profile directory, and repository fixture fallback are also supported. Malformed and duplicate stable IDs are rejected with visible diagnostics and are never silently replaced. The WPF selector shows stable ID, version, calibration status, active runtime ID, and source path; selection is enabled before capture, immutable during capture, and enabled again after stop.
+
+Region editing applies shared semantic source-pixel geometry. MINIMAP creation and every resize handle maintain a square while moves preserve size and bounds. A legacy minimap whose source-pixel aspect deviation is at most 2.5% is treated as rounding drift and normalized around its center; larger deviations are retained with a warning for manual correction. Validation uses a stricter 1% square tolerance. CLOCK remains flexible but must be a wide horizontal crop with a minimum 2:1 source-pixel ratio; invalid geometry is rejected before recognition.
+
+The MINIMAP crop is copied before pooled capture memory is released and submitted to `MinimapValidationWorker`, which has one replaceable pending item. Clock and map results complete independently but are retained in bounded 16-entry evidence maps and joined only by identical source sequence and timestamp. A canonical observation requires that exact match, an image-supported clock with temporal status `Accepted`, and a `Valid` map. Other paired frames are `Unavailable` with `source-frame-mismatch`, `clock-unavailable`, or `minimap-unavailable`; the latest historical clock is never attached to a newer map.
+
+The WPF **Minimap Validation and Session Recording** section exposes profile, enable/state/confidence/features/reason, explicit sample label, session mode, cadence, recording status, current game time, valid/unavailable/saved counts, gap count, accepted bounds, achieved resolution, output path, and warning. It offers labeled/unlabeled diagnostics, start/stop, and open-folder controls. Profile selection is immutable for the complete capture lifetime; mode and cadence are immutable during recording. Recording start requires active capture, both regions, enabled clock recognition and map validation, and selected profiles.
+
+### Explicit sample labels and CLI
+
+A minimap diagnostic contains the original lossless BMP, normalized PGM, and `result.json` with explicit `Valid`, `Invalid`, `Uncertain`, or explicitly `Unlabeled` ground truth; features; profile/version; status/confidence/reasons; source identity/time; nullable accepted clock context; dimensions; and layout. Clock validity, previous map state, and validator output never choose the label.
+
+```text
+dotnet run --project src/LeagueScreenAnalyzer.Cli -- analyze-minimap-diagnostics --diagnostics artifacts/minimap-samples --output artifacts/minimap-analysis
+
+dotnet run --project src/LeagueScreenAnalyzer.Cli -- build-minimap-profile --profile-id league-replay-minimap-v1 --diagnostics artifacts/minimap-samples --output-profile artifacts/minimap-profile
+
+dotnet run --project src/LeagueScreenAnalyzer.Cli -- evaluate-minimap --profile league-replay-minimap-v1 --diagnostics artifacts/minimap-samples --output artifacts/minimap-evaluation
+```
+
+Analysis reports label and feature distributions. Building requires explicit valid evidence and records valid/invalid counts as provenance; a built profile is marked calibrated only when both classes exist. Evaluation excludes uncertain/unlabeled samples from primary metrics and reports totals, TP/TN/FP/FN, precision, recall, feature/confidence distributions, rejection reasons, and per-sample results. Zero false positives is the priority.
+
+### Cadence, gaps, and portable dataset
+
+Accepted observations are bucketed by game time at 250, 500, 1000, or 2000 ms. One candidate wins each bucket; a higher-confidence candidate replaces the previous candidate, duplicate timestamps do not duplicate files, and achieved resolution is reported honestly as median positive saved-game-time spacing.
+
+A gap is created only between valid game-time anchors with unavailable observations between them. Start is the last valid anchor, end is the first later valid anchor, and ordered distinct reasons are retained. Same reasons merge naturally. Start/end unavailable periods remain partial coverage flags. No zero/inverted gap, interpolated map frame, or inferred position is produced. In `ReplayContinuous`, a gap of at least five game seconds warns; `BroadcastVod` is a structural seam and has no broadcast replay-window classifier yet.
+
+```text
+session-<timestamp-guid>/
+  manifest.json
+  timeline.jsonl
+  summary.json
+  gaps.json
+  map/frames/000018420.bmp
+  diagnostics/invalid-map/
+  diagnostics/invalid-clock/
+```
+
+The manifest contains schema/session/source/mode/layout/profile IDs, speed, requested cadence, source and accepted-time bounds, dimensions, and application version. Timeline entries retain source identity, nullable canonical game time, clock/map status and confidence, observation status, nullable relative saved path, and unavailable reason. The summary contains coverage/cadence/gap/open-boundary metrics. Selected crops are ordinary lossless 32-bit BMP files, never database blobs. Metadata is atomically finalized through temporary files on stop; image processing and candidate delivery remain bounded.
+
 ## Build and test
 
 ```text
@@ -180,6 +227,8 @@ Real validation must remain manual:
 
 Do not use physical input automation for this verification.
 
+For the minimap milestone, manually load valid CLOCK/MINIMAP regions, select `league-replay-v3` and `league-replay-minimap-v1`, enable both workers, and verify the visible crop's status and features. Save explicit valid and practical invalid/obscured samples. Record a short experimental session without pause/seek/resize/layout changes; compare timeline game times and BMP filenames to the visible replay clock; confirm repeated seconds remain cadence-bounded; inspect manifest, timeline, summary, gaps, and paths; verify no invalid map is marked valid; confirm preview responsiveness; stop capture; and confirm no analyzer process remains.
+
 ## Known limitations
 
 - The checked-in templates and labeled images are synthetic mechanics fixtures, not real League replay samples.
@@ -188,7 +237,11 @@ Do not use physical input automation for this verification.
 - `ReplayContinuous` intentionally refuses repair after long absence or discontinuity.
 - Crop correctness is user-configured; automatic CLOCK discovery is out of scope.
 - CPU BGRA readback/copy favors safe ownership over zero-copy throughput.
+- `league-replay-minimap-v1` is synthetic calibration; real replay precision is not measured or claimed.
+- Border/corner signals are coarse and no landmark/reference mask is calibrated yet.
+- Broadcast-VOD replay-window classification is not implemented.
+- Session metadata is retained in memory until atomic finalization; processing queues and image candidates remain bounded.
 
 ## Next milestone
 
-Validate configured MINIMAP visibility, emit timestamped valid minimap observations, and create explicit unavailable intervals when the clock or minimap cannot be trusted.
+Consume saved timestamped minimap observations and detect a first limited set of map points of interest, while preserving confidence and provenance.

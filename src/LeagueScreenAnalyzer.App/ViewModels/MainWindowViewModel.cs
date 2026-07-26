@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Runtime.CompilerServices;
@@ -10,6 +11,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using LeagueScreenAnalyzer.App.Services;
 using LeagueScreenAnalyzer.Capture.Live;
+using LeagueScreenAnalyzer.Capture.Processing;
 using LeagueScreenAnalyzer.Core.Models;
 using LeagueScreenAnalyzer.Core.Regions;
 using LeagueScreenAnalyzer.Imaging;
@@ -30,6 +32,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
     private readonly ICaptureLayoutStore _layoutStore;
     private readonly ISourceAspectRatioCompatibility _aspectRatioCompatibility;
     private readonly ClockProfileCatalog _clockProfileCatalog;
+    private readonly MinimapProfileCatalog _minimapProfileCatalog;
     private CaptureState _captureState;
     private WriteableBitmap? _previewImage;
     private readonly CropBitmapCache _clockCropCache = new();
@@ -42,6 +45,36 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
     private bool _overwriteLayout;
     private readonly ClockRecognitionWorker _clockWorker;
     private readonly ClockDiagnosticWriter _clockDiagnosticWriter = new();
+    private readonly MinimapValidationWorker _minimapWorker;
+    private readonly MinimapDiagnosticWriter _minimapDiagnosticWriter = new();
+    private readonly ObservationPolicy _observationPolicy = new();
+    private readonly Dictionary<long, (MapValidationResult Result, MapImage Image)> _mapEvidence = [];
+    private readonly Dictionary<long, ClockReading> _clockEvidence = [];
+    private MapImage? _latestMinimapImage;
+    private MapValidationResult? _latestMapResult;
+    private SessionDatasetRecorder? _sessionRecorder;
+    private string _minimapStatus = MapFrameStatus.NotConfigured.ToString();
+    private string _minimapConfidence = "0.00";
+    private string _minimapFeatures = "No minimap features.";
+    private string _minimapReason = "Validation has not run.";
+    private bool _minimapValidationEnabled = true;
+    private string _selectedMinimapProfileId =
+        BuiltInMinimapProfiles.LeagueReplayMinimapV1Id;
+    private string? _minimapProfileWarning;
+    private MinimapSampleLabel _selectedMinimapLabel = MinimapSampleLabel.Valid;
+    private bool _saveUnlabeledMinimapSample;
+    private SessionMode _sessionMode = SessionMode.ReplayContinuous;
+    private int _observationCadenceMilliseconds = 1000;
+    private string _recordingStatus = "Stopped";
+    private int _validObservationCount;
+    private int _unavailableObservationCount;
+    private int _savedMapFrameCount;
+    private string? _sessionOutputPath;
+    private string? _sessionWarning;
+    private int _gapCount;
+    private string _firstAcceptedGameTime = "None";
+    private string _lastAcceptedGameTime = "None";
+    private string _achievedGameTimeResolution = "Not yet measured";
     private ClockRecognitionObservation? _latestClockObservation;
     private bool _recognitionEnabled = true;
     private double _selectedPlaybackSpeed = 1;
@@ -73,7 +106,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
         IPreviewCoordinateMapper? coordinateMapper = null,
         RegionEditor? regionEditor = null,
         ISourceAspectRatioCompatibility? aspectRatioCompatibility = null,
-        ClockProfileCatalog? clockProfileCatalog = null)
+        ClockProfileCatalog? clockProfileCatalog = null,
+        MinimapProfileCatalog? minimapProfileCatalog = null)
     {
         _captureController = captureController ?? throw new ArgumentNullException(nameof(captureController));
         _windowHandleProvider = windowHandleProvider ?? throw new ArgumentNullException(nameof(windowHandleProvider));
@@ -85,11 +119,20 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
         _aspectRatioCompatibility = aspectRatioCompatibility
             ?? new SourceAspectRatioCompatibility(MaterialAspectRatioThreshold);
         _clockProfileCatalog = clockProfileCatalog ?? ClockProfileCatalog.CreateDefault();
+        _minimapProfileCatalog =
+            minimapProfileCatalog ?? MinimapProfileCatalog.CreateDefault();
         foreach (ClockProfileCatalogError error in _clockProfileCatalog.Errors)
         {
             _logger.LogError(
                 "Clock profile discovery error at {ManifestPath}: {Message}",
                 error.ManifestPath,
+                error.Message);
+        }
+        foreach (MinimapProfileCatalogError error in _minimapProfileCatalog.Errors)
+        {
+            _logger.LogError(
+                "Minimap profile discovery error at {ProfilePath}: {Message}",
+                error.ProfilePath,
                 error.Message);
         }
         _captureState = captureController.State;
@@ -99,6 +142,10 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
             SelectedProfile());
         _clockWorker.ObservationAvailable += OnClockObservationAvailable;
         _clockWorker.RecognitionFailed += OnClockRecognitionFailed;
+        _minimapWorker = new MinimapValidationWorker(
+            new StructuralMinimapValidator(SelectedMinimapProfile()));
+        _minimapWorker.ObservationAvailable += OnMinimapObservationAvailable;
+        _minimapWorker.ValidationFailed += OnMinimapValidationFailed;
 
         ClockOverlay = new RegionOverlayViewModel(RegionType.Clock);
         MinimapOverlay = new RegionOverlayViewModel(RegionType.Minimap);
@@ -112,6 +159,25 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
             SaveDiagnosticBundle, () => _previewImage is not null);
         SaveClockSampleCommand = new RelayCommand(
             SaveClockSample, () => _latestClockObservation is not null);
+        SaveMinimapSampleCommand = new AsyncRelayCommand(
+            SaveMinimapSampleAsync,
+            () => _latestMinimapImage is not null && _latestMapResult is not null,
+            SetCommandError);
+        SaveMinimapDiagnosticCommand = new AsyncRelayCommand(
+            SaveUnlabeledMinimapDiagnosticAsync,
+            () => _latestMinimapImage is not null && _latestMapResult is not null,
+            SetCommandError);
+        StartSessionRecordingCommand = new AsyncRelayCommand(
+            StartSessionRecordingAsync,
+            CanStartSessionRecording,
+            SetCommandError);
+        StopSessionRecordingCommand = new AsyncRelayCommand(
+            StopSessionRecordingAsync,
+            () => _sessionRecorder is not null,
+            SetCommandError);
+        OpenSessionFolderCommand = new RelayCommand(
+            OpenSessionFolder,
+            () => Directory.Exists(_sessionOutputPath));
         EditClockCommand = new RelayCommand(
             () => ActivateEditor(RegionType.Clock), () => CanEditRegions);
         EditMinimapCommand = new RelayCommand(
@@ -133,7 +199,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
     }
 
     public string Title => "League Screen Analyzer";
-    public string MilestoneDescription => "Visible game-clock recognition and temporal validation";
+    public string MilestoneDescription => "Precision-first timestamped minimap observations";
     public string CaptureStatus => _captureState.Status.ToString();
     public string SelectedSourceName => _captureState.SourceName ?? "No window selected";
     public string FrameDimensions => _captureState.Width > 0 && _captureState.Height > 0
@@ -150,10 +216,22 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
     public string? LayoutValidationMessage => _layoutValidationMessage;
     public ImageSource? PreviewImage => _previewImage;
     public bool CanEditRegions => _captureState.IsCapturing && _captureState.Width > 0;
-    public bool BothRegionsValid => ClockRegion is not null && MinimapRegion is not null;
+    public bool BothRegionsValid =>
+        _regionEditor.Validate(RegionType.Clock)?.IsValid == true &&
+        _regionEditor.Validate(RegionType.Minimap)?.IsValid == true;
     public string RegionValidity => BothRegionsValid
         ? "Both required regions are valid."
-        : "Configure both CLOCK and MINIMAP before saving.";
+        : string.Join(
+            " ",
+            new[]
+            {
+                ClockRegion is null
+                    ? "Configure CLOCK."
+                    : _regionEditor.Validate(RegionType.Clock)?.Error,
+                MinimapRegion is null
+                    ? "Configure MINIMAP."
+                    : _regionEditor.Validate(RegionType.Minimap)?.Error
+            }.OfType<string>());
     public bool HasUnsavedChanges => _regionEditor.HasUnsavedChanges;
     public string UnsavedStatus => HasUnsavedChanges ? "Unsaved changes" : "Saved";
     public NormalizedRegion? ClockRegion => _regionEditor.GetRegion(RegionType.Clock);
@@ -288,6 +366,141 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
             }
         }
     }
+    public IReadOnlyList<MinimapProfileCatalogEntry> AvailableMinimapProfiles =>
+        _minimapProfileCatalog.Profiles;
+    public string MinimapProfileId
+    {
+        get => _selectedMinimapProfileId;
+        set
+        {
+            if (!CanConfigureMinimap ||
+                string.Equals(_selectedMinimapProfileId, value, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            if (!_minimapProfileCatalog.TryGet(value, out MinimapProfileCatalogEntry? entry))
+            {
+                _minimapProfileWarning =
+                    $"Minimap profile '{value}' could not be loaded. Select an available profile; the active profile was not changed.";
+                _logger.LogError("Unavailable minimap profile selected: {ProfileId}.", value);
+                OnPropertyChanged(nameof(MinimapProfileWarning));
+                return;
+            }
+
+            _minimapWorker.SetValidator(new StructuralMinimapValidator(entry!.Profile));
+            _selectedMinimapProfileId = value;
+            _minimapProfileWarning = null;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(MinimapProfileName));
+            OnPropertyChanged(nameof(MinimapProfileVersion));
+            OnPropertyChanged(nameof(MinimapCalibrationStatus));
+            OnPropertyChanged(nameof(MinimapProfileSource));
+            OnPropertyChanged(nameof(ActiveMinimapProfileId));
+            OnPropertyChanged(nameof(MinimapProfileWarning));
+            _logger.LogInformation(
+                "Minimap profile selected: {ProfileId} from {SourcePath}.",
+                value,
+                entry.SourcePath ?? "built-in");
+        }
+    }
+    public string MinimapProfileName => SelectedMinimapEntry().DisplayName;
+    public int MinimapProfileVersion => SelectedMinimapEntry().Version;
+    public string MinimapCalibrationStatus => SelectedMinimapEntry().CalibrationStatus;
+    public string MinimapProfileSource =>
+        SelectedMinimapEntry().SourcePath ?? "Built into application";
+    public string ActiveMinimapProfileId =>
+        _minimapWorker.ActiveProfileId ?? "Unavailable";
+    public string MinimapProfileWarning
+    {
+        get
+        {
+            if (_minimapProfileWarning is not null)
+            {
+                return _minimapProfileWarning;
+            }
+
+            return _minimapProfileCatalog.Errors.Count == 0
+                ? string.Empty
+                : string.Join(
+                    " | ",
+                    _minimapProfileCatalog.Errors.Select(error => error.Message));
+        }
+    }
+    public bool CanConfigureMinimap =>
+        !_captureState.IsCapturing && _sessionRecorder is null;
+    public bool MinimapValidationEnabled
+    {
+        get => _minimapValidationEnabled;
+        set
+        {
+            if (!CanConfigureMinimap || !Set(ref _minimapValidationEnabled, value))
+            {
+                return;
+            }
+
+            if (!value)
+            {
+                _ = _minimapWorker.StopAsync();
+                SetMinimapUnavailable(MapFrameStatus.NotConfigured, "Minimap validation is disabled.");
+            }
+        }
+    }
+    public string MinimapStatus => _minimapStatus;
+    public string MinimapConfidence => _minimapConfidence;
+    public string MinimapFeatures => _minimapFeatures;
+    public string MinimapReason => _minimapReason;
+    public IReadOnlyList<MinimapSampleLabel> MinimapLabels { get; } =
+        [MinimapSampleLabel.Valid, MinimapSampleLabel.Invalid, MinimapSampleLabel.Uncertain];
+    public MinimapSampleLabel SelectedMinimapLabel
+    {
+        get => _selectedMinimapLabel;
+        set => Set(ref _selectedMinimapLabel, value);
+    }
+    public bool SaveUnlabeledMinimapSample
+    {
+        get => _saveUnlabeledMinimapSample;
+        set => Set(ref _saveUnlabeledMinimapSample, value);
+    }
+    public IReadOnlyList<SessionMode> SessionModes { get; } =
+        [SessionMode.ReplayContinuous, SessionMode.BroadcastVod];
+    public SessionMode SelectedSessionMode
+    {
+        get => _sessionMode;
+        set
+        {
+            if (CanConfigureMinimap)
+            {
+                Set(ref _sessionMode, value);
+            }
+        }
+    }
+    public IReadOnlyList<int> ObservationCadencesMilliseconds { get; } = [250, 500, 1000, 2000];
+    public int ObservationCadenceMilliseconds
+    {
+        get => _observationCadenceMilliseconds;
+        set
+        {
+            if (CanConfigureMinimap && ObservationCadencesMilliseconds.Contains(value))
+            {
+                Set(ref _observationCadenceMilliseconds, value);
+            }
+        }
+    }
+    public string RecordingStatus => _recordingStatus;
+    public int ValidObservationCount => _validObservationCount;
+    public int UnavailableObservationCount => _unavailableObservationCount;
+    public int SavedMapFrameCount => _savedMapFrameCount;
+    public int GapCount => _gapCount;
+    public string FirstAcceptedGameTime => _firstAcceptedGameTime;
+    public string LastAcceptedGameTime => _lastAcceptedGameTime;
+    public string AchievedGameTimeResolution => _achievedGameTimeResolution;
+    public string CurrentAcceptedGameTime => _clockAcceptedTime ?? "Unavailable";
+    public string SessionOutputPath => _sessionOutputPath ?? "No active session.";
+    public string SessionWarning => _sessionWarning ??
+        (SelectedMinimapProfile().CalibratedForCanonicalRecording
+            ? string.Empty
+            : "Initial minimap profile is calibration-oriented; recordings are experimental.");
     public ObservableCollection<string> AvailableSavedLayouts { get; } = [];
     public RegionOverlayViewModel ClockOverlay { get; }
     public RegionOverlayViewModel MinimapOverlay { get; }
@@ -297,6 +510,11 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
     public AsyncRelayCommand StopCaptureCommand { get; }
     public RelayCommand SaveDiagnosticFrameCommand { get; }
     public RelayCommand SaveClockSampleCommand { get; }
+    public AsyncRelayCommand SaveMinimapSampleCommand { get; }
+    public AsyncRelayCommand SaveMinimapDiagnosticCommand { get; }
+    public AsyncRelayCommand StartSessionRecordingCommand { get; }
+    public AsyncRelayCommand StopSessionRecordingCommand { get; }
+    public RelayCommand OpenSessionFolderCommand { get; }
     public RelayCommand EditClockCommand { get; }
     public RelayCommand EditMinimapCommand { get; }
     public RelayCommand ClearClockCommand { get; }
@@ -412,6 +630,16 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
         _captureController.FrameArrived -= OnFrameArrived;
         _clockWorker.ObservationAvailable -= OnClockObservationAvailable;
         _clockWorker.RecognitionFailed -= OnClockRecognitionFailed;
+        _minimapWorker.ObservationAvailable -= OnMinimapObservationAvailable;
+        _minimapWorker.ValidationFailed -= OnMinimapValidationFailed;
+        await _minimapWorker.DisposeAsync();
+        if (_sessionRecorder is not null)
+        {
+            await _sessionRecorder.DisposeAsync();
+            _sessionRecorder = null;
+        }
+        DisposeMapEvidence();
+        _latestMinimapImage?.Dispose();
         await _clockWorker.DisposeAsync();
         await _captureController.DisposeAsync();
     }
@@ -477,7 +705,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
         {
             CaptureLayout layout = await _layoutStore.LoadAsync(name);
             _regionEditor.Cancel();
-            _regionEditor.Load(layout.ClockRegion, layout.MinimapRegion);
+            IReadOnlyList<string> geometryWarnings =
+                _regionEditor.Load(layout.ClockRegion, layout.MinimapRegion);
             _layoutAspectRatio = layout.SourceAspectRatio;
             if (layout.ClockProfileId is string profileId)
             {
@@ -485,7 +714,9 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
             }
             LayoutName = layout.Name;
             _activeEditType = null;
-            _layoutValidationMessage = $"Loaded layout '{layout.Name}'.";
+            _layoutValidationMessage = geometryWarnings.Count == 0
+                ? $"Loaded layout '{layout.Name}'."
+                : $"Loaded layout '{layout.Name}'. {string.Join(" ", geometryWarnings)}";
             _logger.LogInformation("Capture layout {LayoutName} loaded.", layout.Name);
             EvaluateCompatibility();
             RaiseRegionState();
@@ -539,6 +770,17 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
             if ((oldWidth != args.State.Width || oldHeight != args.State.Height)
                 && args.State.Width > 0 && args.State.Height > 0)
             {
+                if (_regionEditor.Operation == RegionEditOperation.None)
+                {
+                    IReadOnlyList<string> geometryWarnings = _regionEditor.SetSourceSize(
+                        new RegionSourceSize(args.State.Width, args.State.Height));
+                    if (geometryWarnings.Count > 0)
+                    {
+                        _layoutValidationMessage = string.Join(" ", geometryWarnings);
+                        OnPropertyChanged(nameof(LayoutValidationMessage));
+                        RaiseRegionState();
+                    }
+                }
                 EvaluateCompatibility();
                 UpdateOverlayGeometry();
             }
@@ -550,10 +792,17 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
             OnPropertyChanged(nameof(ErrorMessage));
             OnPropertyChanged(nameof(CanEditRegions));
             OnPropertyChanged(nameof(CanConfigureClockRecognition));
+            OnPropertyChanged(nameof(CanConfigureMinimap));
             OnPropertyChanged(nameof(ActiveClockProfileId));
+            OnPropertyChanged(nameof(ActiveMinimapProfileId));
             if (!args.State.IsCapturing)
             {
                 _ = _clockWorker.StopAsync();
+                _ = _minimapWorker.StopAsync();
+                if (_sessionRecorder is not null)
+                {
+                    _ = StopSessionRecordingAsync();
+                }
             }
             RaiseCommandStates();
         });
@@ -628,7 +877,15 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
                 pixelPointer,
                 frame.SequenceNumber,
                 frame.SourceTimestamp);
-            UpdateCrop(RegionType.Minimap, MinimapRegion, width, height, payload, pixelPointer);
+            UpdateCrop(
+                RegionType.Minimap,
+                MinimapRegion,
+                width,
+                height,
+                payload,
+                pixelPointer,
+                frame.SequenceNumber,
+                frame.SourceTimestamp);
         }
 
         SaveDiagnosticFrameCommand.RaiseCanExecuteChanged();
@@ -655,10 +912,29 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
                 _ = _clockWorker.StopAsync();
                 SetClockUnavailable(ClockReadingStatus.NotConfigured, "CLOCK region is not configured.");
             }
+            else
+            {
+                _ = _minimapWorker.StopAsync();
+                SetMinimapUnavailable(MapFrameStatus.NotConfigured, "MINIMAP region is not configured.");
+            }
             return;
         }
 
         Int32Rect pixelRect = ToPixelRect(region, sourceWidth, sourceHeight);
+        RegionGeometryValidation? geometry = _regionEditor.Validate(type);
+        if (geometry is { IsValid: false })
+        {
+            if (type == RegionType.Clock)
+            {
+                _ = _clockWorker.StopAsync();
+                SetClockUnavailable(ClockReadingStatus.NotConfigured, geometry.Error!);
+            }
+            else
+            {
+                _ = _minimapWorker.StopAsync();
+                SetMinimapUnavailable(MapFrameStatus.IncompatibleGeometry, geometry.Error!);
+            }
+        }
         CropBitmapCache cache = type == RegionType.Clock ? _clockCropCache : _minimapCropCache;
         WriteableBitmap crop = cache.GetOrCreate(pixelRect.Width, pixelRect.Height);
         preview.Image = crop;
@@ -674,7 +950,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
             $"{pixelRect.Width} × {pixelRect.Height} px");
         preview.Coordinates = FormatRegion(region);
 
-        if (type == RegionType.Clock && RecognitionEnabled && _captureState.IsCapturing)
+        if (geometry?.IsValid != false &&
+            type == RegionType.Clock && RecognitionEnabled && _captureState.IsCapturing)
         {
             try
             {
@@ -709,6 +986,33 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
             {
                 ReportClockRecognitionFailure(exception);
             }
+        }
+        else if (geometry?.IsValid != false &&
+                 type == RegionType.Minimap &&
+                 MinimapValidationEnabled &&
+                 _captureState.IsCapturing)
+        {
+            int cropStride = pixelRect.Width * 4;
+            byte[] copy = new byte[cropStride * pixelRect.Height];
+            for (int y = 0; y < pixelRect.Height; y++)
+            {
+                new ReadOnlySpan<byte>(
+                    pixelPointer + offset + (y * payload.Stride),
+                    cropStride).CopyTo(copy.AsSpan(y * cropStride, cropStride));
+            }
+
+            if (!_minimapWorker.IsRunning)
+            {
+                _minimapWorker.Start();
+            }
+
+            _minimapWorker.TrySubmit(new MapImage(
+                pixelRect.Width,
+                pixelRect.Height,
+                cropStride,
+                copy,
+                sourceSequence,
+                sourceTimestamp));
         }
     }
 
@@ -853,6 +1157,12 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
         {
             _latestClockObservation = observation;
             ClockReading reading = observation.Reading;
+            if (reading.SourceFrameSequence is long clockSequence)
+            {
+                _clockEvidence[clockSequence] = reading;
+                TrimEvidence();
+                TryRecordSameFrame(clockSequence);
+            }
             _clockStatus = reading.Status.ToString();
             _clockRecognizedText = reading.RawRecognizedText;
             _clockAcceptedTime = reading.Status == ClockReadingStatus.Valid
@@ -877,6 +1187,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
             OnPropertyChanged(nameof(ClockConfidence));
             OnPropertyChanged(nameof(RecognitionCadence));
             OnPropertyChanged(nameof(ClockDiagnostic));
+            OnPropertyChanged(nameof(CurrentAcceptedGameTime));
             SaveClockSampleCommand.RaiseCanExecuteChanged();
 
             if (reading.Status == ClockReadingStatus.Valid)
@@ -894,6 +1205,320 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
                     reading.DiagnosticReason);
             }
         });
+    }
+
+    private void OnMinimapObservationAvailable(
+        object? sender,
+        MinimapValidationObservation observation)
+    {
+        byte[] pixels = observation.Image.BgraPixels.ToArray();
+        MapImage retained = new(
+            observation.Image.Width,
+            observation.Image.Height,
+            observation.Image.Width * 4,
+            pixels,
+            observation.Image.SourceFrameSequence,
+            observation.Image.SourceTimestamp);
+        RunOnDispatcher(() =>
+        {
+            _latestMinimapImage?.Dispose();
+            _latestMinimapImage = CloneMapImage(retained);
+            _latestMapResult = observation.Result;
+            _minimapStatus = observation.Result.Status.ToString();
+            _minimapConfidence = observation.Result.Confidence.ToString("0.00", CultureInfo.InvariantCulture);
+            _minimapReason = observation.Result.Reasons.Count == 0
+                ? "Required profile checks passed."
+                : string.Join(" ", observation.Result.Reasons);
+            _minimapFeatures = FormatMapFeatures(observation.Result.Features);
+            if (_mapEvidence.Remove(retained.SourceFrameSequence, out var replaced))
+            {
+                replaced.Image.Dispose();
+            }
+
+            _mapEvidence[retained.SourceFrameSequence] = (observation.Result, retained);
+            TrimEvidence();
+            TryRecordSameFrame(retained.SourceFrameSequence);
+            OnPropertyChanged(nameof(MinimapStatus));
+            OnPropertyChanged(nameof(MinimapConfidence));
+            OnPropertyChanged(nameof(MinimapReason));
+            OnPropertyChanged(nameof(MinimapFeatures));
+            SaveMinimapSampleCommand.RaiseCanExecuteChanged();
+            SaveMinimapDiagnosticCommand.RaiseCanExecuteChanged();
+        });
+    }
+
+    private void OnMinimapValidationFailed(
+        object? sender,
+        MinimapValidationFailedEventArgs args)
+    {
+        RunOnDispatcher(() =>
+        {
+            _logger.LogError(args.Exception, "Minimap validation failed.");
+            SetMinimapUnavailable(
+                MapFrameStatus.Unknown,
+                $"Minimap validation failed: {args.Exception.Message}");
+        });
+    }
+
+    private void TryRecordSameFrame(long sequence)
+    {
+        if (_sessionRecorder is null ||
+            !_clockEvidence.Remove(sequence, out ClockReading? clock) ||
+            !_mapEvidence.Remove(sequence, out var map))
+        {
+            return;
+        }
+
+        try
+        {
+            SourceFrame source = new(
+                sequence,
+                map.Image.SourceTimestamp,
+                _captureState.Width,
+                _captureState.Height,
+                EvidencePayload.Instance);
+            RegionFrame region = new(
+                RegionType.Minimap,
+                sequence,
+                map.Image.SourceTimestamp,
+                map.Image.Width,
+                map.Image.Height,
+                EvidencePayload.Instance);
+            TimelineObservation timeline = _observationPolicy.Create(
+                source,
+                region,
+                clock,
+                map.Result,
+                SelectedSessionMode);
+            MapImage? image = timeline.Status == ObservationStatus.Valid
+                ? CloneMapImage(map.Image)
+                : null;
+            _sessionRecorder.Record(timeline, image);
+            if (timeline.Status == ObservationStatus.Valid)
+            {
+                _validObservationCount++;
+            }
+            else
+            {
+                _unavailableObservationCount++;
+            }
+
+            _savedMapFrameCount = _sessionRecorder.SavedMapFrameCount;
+            OnPropertyChanged(nameof(ValidObservationCount));
+            OnPropertyChanged(nameof(UnavailableObservationCount));
+            OnPropertyChanged(nameof(SavedMapFrameCount));
+        }
+        catch (Exception exception)
+        {
+            _sessionWarning = $"Session observation failed: {exception.Message}";
+            _logger.LogError(exception, "Minimap session observation processing failed.");
+            OnPropertyChanged(nameof(SessionWarning));
+        }
+        finally
+        {
+            map.Image.Dispose();
+        }
+    }
+
+    private async Task SaveMinimapSampleAsync()
+    {
+        await SaveMinimapDiagnosticCoreAsync(
+            SaveUnlabeledMinimapSample ? MinimapSampleLabel.Unlabeled : SelectedMinimapLabel);
+        _saveUnlabeledMinimapSample = false;
+        OnPropertyChanged(nameof(SaveUnlabeledMinimapSample));
+    }
+
+    private Task SaveUnlabeledMinimapDiagnosticAsync() =>
+        SaveMinimapDiagnosticCoreAsync(MinimapSampleLabel.Unlabeled);
+
+    private async Task SaveMinimapDiagnosticCoreAsync(MinimapSampleLabel label)
+    {
+        if (_latestMinimapImage is null || _latestMapResult is null)
+        {
+            return;
+        }
+
+        string root = Path.Combine(Environment.CurrentDirectory, "artifacts", "minimap-samples");
+        string directory = await _minimapDiagnosticWriter.WriteAsync(
+            root,
+            _latestMinimapImage,
+            SelectedMinimapProfile(),
+            _latestMapResult,
+            label,
+            _latestClockObservation?.Reading.Status == ClockReadingStatus.Valid
+                ? _latestClockObservation.Reading.GameTime
+                : null,
+            SelectedSavedLayout ?? LayoutName);
+        _diagnosticMessage = $"Saved {label.ToString().ToLowerInvariant()} minimap diagnostic: {directory}";
+        OnPropertyChanged(nameof(DiagnosticMessage));
+    }
+
+    private bool CanStartSessionRecording() =>
+        _sessionRecorder is null &&
+        _captureState.IsCapturing &&
+        ClockRegion is not null &&
+        MinimapRegion is not null &&
+        RecognitionEnabled &&
+        MinimapValidationEnabled &&
+        !string.IsNullOrWhiteSpace(SelectedClockProfileId) &&
+        !string.IsNullOrWhiteSpace(MinimapProfileId);
+
+    private Task StartSessionRecordingAsync()
+    {
+        if (!CanStartSessionRecording())
+        {
+            throw new InvalidOperationException(
+                "Recording requires active capture, CLOCK and MINIMAP regions, clock recognition, and valid profiles.");
+        }
+
+        string root = Path.Combine(Environment.CurrentDirectory, "artifacts", "sessions");
+        _sessionRecorder = new SessionDatasetRecorder(
+            root,
+            new SessionRecordingConfiguration(
+                SelectedSessionMode,
+                TimeSpan.FromMilliseconds(ObservationCadenceMilliseconds),
+                SelectedSavedLayout ?? (string.IsNullOrWhiteSpace(LayoutName) ? "active-layout" : LayoutName),
+                SelectedClockProfileId,
+                MinimapProfileId,
+                SelectedPlaybackSpeed,
+                _captureState.Width,
+                _captureState.Height),
+            typeof(MainWindowViewModel).Assembly.GetName().Version?.ToString());
+        _sessionOutputPath = _sessionRecorder.OutputDirectory;
+        MinimapValidationProfile minimapProfile = SelectedMinimapProfile();
+        _recordingStatus = minimapProfile.CalibratedForCanonicalRecording
+            ? "Recording"
+            : "Recording (experimental profile)";
+        _validObservationCount = 0;
+        _unavailableObservationCount = 0;
+        _savedMapFrameCount = 0;
+        _gapCount = 0;
+        _firstAcceptedGameTime = "None";
+        _lastAcceptedGameTime = "None";
+        _achievedGameTimeResolution = "Not yet measured";
+        _sessionWarning = minimapProfile.CalibratedForCanonicalRecording
+            ? null
+            : "Canonical accuracy is not claimed until explicitly labeled real samples calibrate this profile.";
+        RaiseSessionState();
+        return Task.CompletedTask;
+    }
+
+    private async Task StopSessionRecordingAsync()
+    {
+        SessionDatasetRecorder? recorder = _sessionRecorder;
+        if (recorder is null)
+        {
+            return;
+        }
+
+        SessionRecordingSummary summary = await recorder.StopAsync();
+        _savedMapFrameCount = summary.SavedMapFrames;
+        _gapCount = summary.GapCount;
+        _firstAcceptedGameTime = FormatOptionalGameTime(summary.FirstAcceptedGameTime);
+        _lastAcceptedGameTime = FormatOptionalGameTime(summary.LastAcceptedGameTime);
+        _achievedGameTimeResolution = summary.AchievedGameTimeResolution is TimeSpan achieved
+            ? $"{achieved.TotalMilliseconds:0} ms"
+            : "Insufficient saved anchors";
+        _sessionWarning = summary.Warning ?? _sessionWarning;
+        _recordingStatus = "Stopped";
+        _sessionRecorder = null;
+        RaiseSessionState();
+    }
+
+    private void OpenSessionFolder()
+    {
+        if (!Directory.Exists(_sessionOutputPath))
+        {
+            return;
+        }
+
+        Process.Start(new ProcessStartInfo("explorer.exe", _sessionOutputPath)
+        {
+            UseShellExecute = true
+        });
+    }
+
+    private void RaiseSessionState()
+    {
+        OnPropertyChanged(nameof(RecordingStatus));
+        OnPropertyChanged(nameof(SavedMapFrameCount));
+        OnPropertyChanged(nameof(GapCount));
+        OnPropertyChanged(nameof(FirstAcceptedGameTime));
+        OnPropertyChanged(nameof(LastAcceptedGameTime));
+        OnPropertyChanged(nameof(AchievedGameTimeResolution));
+        OnPropertyChanged(nameof(SessionOutputPath));
+        OnPropertyChanged(nameof(SessionWarning));
+        OnPropertyChanged(nameof(CanConfigureMinimap));
+        StartSessionRecordingCommand.RaiseCanExecuteChanged();
+        StopSessionRecordingCommand.RaiseCanExecuteChanged();
+        OpenSessionFolderCommand.RaiseCanExecuteChanged();
+    }
+
+    private void SetMinimapUnavailable(MapFrameStatus status, string reason)
+    {
+        _minimapStatus = status.ToString();
+        _minimapConfidence = "0.00";
+        _minimapFeatures = "No trusted feature result.";
+        _minimapReason = reason;
+        OnPropertyChanged(nameof(MinimapStatus));
+        OnPropertyChanged(nameof(MinimapConfidence));
+        OnPropertyChanged(nameof(MinimapFeatures));
+        OnPropertyChanged(nameof(MinimapReason));
+    }
+
+    private void TrimEvidence()
+    {
+        while (_mapEvidence.Count > 16)
+        {
+            long key = _mapEvidence.Keys.Min();
+            if (_mapEvidence.Remove(key, out var removed))
+            {
+                removed.Image.Dispose();
+            }
+        }
+
+        while (_clockEvidence.Count > 16)
+        {
+            _clockEvidence.Remove(_clockEvidence.Keys.Min());
+        }
+    }
+
+    private void DisposeMapEvidence()
+    {
+        foreach (var evidence in _mapEvidence.Values)
+        {
+            evidence.Image.Dispose();
+        }
+
+        _mapEvidence.Clear();
+        _clockEvidence.Clear();
+    }
+
+    private static MapImage CloneMapImage(MapImage image) =>
+        new(
+            image.Width,
+            image.Height,
+            image.Width * 4,
+            image.BgraPixels.ToArray(),
+            image.SourceFrameSequence,
+            image.SourceTimestamp);
+
+    private static string FormatMapFeatures(MapFeatureValues? features) =>
+        features is null
+            ? "Required features unavailable."
+            : string.Create(
+                CultureInfo.InvariantCulture,
+                $"{features.CropWidth}x{features.CropHeight}; mean {features.MeanLuminance:F1}; " +
+                $"variance {features.LuminanceVariance:F1}; edges {features.EdgeDensity:P1}; " +
+                $"black {features.NearBlackPercentage:P1}; border {features.BorderConsistency:F2}; " +
+                $"corners {features.CornerConsistency:F2}");
+
+    private static string FormatOptionalGameTime(TimeSpan? gameTime) =>
+        gameTime?.ToString(@"hh\:mm\:ss\.fff", CultureInfo.InvariantCulture) ?? "None";
+
+    private sealed class EvidencePayload : IFramePayload
+    {
+        public static EvidencePayload Instance { get; } = new();
     }
 
     private void OnClockRecognitionFailed(object? sender, ClockRecognitionFailedEventArgs args)
@@ -923,6 +1548,12 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
 
     private ClockProfileCatalogEntry SelectedCatalogEntry() =>
         _clockProfileCatalog.Get(_selectedClockProfileId);
+
+    private MinimapProfileCatalogEntry SelectedMinimapEntry() =>
+        _minimapProfileCatalog.Get(_selectedMinimapProfileId);
+
+    private MinimapValidationProfile SelectedMinimapProfile() =>
+        SelectedMinimapEntry().Profile;
 
     internal bool RestorePersistedClockProfile(string profileId, string sourceName)
     {
@@ -1181,6 +1812,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
         ClearClockCommand.RaiseCanExecuteChanged();
         ClearMinimapCommand.RaiseCanExecuteChanged();
         SaveLayoutCommand.RaiseCanExecuteChanged();
+        StartSessionRecordingCommand.RaiseCanExecuteChanged();
     }
 
     private static string FormatRegion(NormalizedRegion? region) => region is null
@@ -1219,6 +1851,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
         EditMinimapCommand.RaiseCanExecuteChanged();
         ClearClockCommand.RaiseCanExecuteChanged();
         ClearMinimapCommand.RaiseCanExecuteChanged();
+        StartSessionRecordingCommand.RaiseCanExecuteChanged();
+        StopSessionRecordingCommand.RaiseCanExecuteChanged();
     }
 
     private void RunOnDispatcher(Action action)

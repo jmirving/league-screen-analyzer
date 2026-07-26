@@ -1,0 +1,24 @@
+{
+  "schemaVersion": "1.0",
+  "label": "uncertain",
+  "profileId": "league-replay-minimap-v1",
+  "profileVersion": 1,
+  "validatorResult": {
+    "status": "lowInformation", "confidence": 0.0,
+    "reasons": ["Crop does not contain enough luminance information."],
+    "profileId": "league-replay-minimap-v1",
+    "features": {
+      "cropWidth": 240, "cropHeight": 240, "aspectRatio": 1.0,
+      "meanLuminance": 70.0, "luminanceVariance": 3.0,
+      "minimumLuminance": 66, "maximumLuminance": 74,
+      "nearBlackPercentage": 0.0, "nearUniformPercentage": 0.91,
+      "edgeDensity": 0.0, "borderConsistency": 0.99,
+      "cornerConsistency": 0.99, "referenceSimilarity": null
+    },
+    "sourceFrameSequence": 4, "sourceTimestamp": "00:00:00.400"
+  },
+  "sourceFrameSequence": 4, "sourceTimestamp": "00:00:00.400",
+  "acceptedGameTime": null, "cropWidth": 240, "cropHeight": 240,
+  "captureLayout": "stable-replay", "originalImagePath": "minimap-original.bmp",
+  "processedImagePath": "minimap-normalized.pgm"
+}

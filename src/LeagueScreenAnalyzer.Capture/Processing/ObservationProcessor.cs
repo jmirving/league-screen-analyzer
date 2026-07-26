@@ -5,12 +5,17 @@ namespace LeagueScreenAnalyzer.Capture.Processing;
 
 public sealed class ObservationProcessor(
     IGameClockReader clockReader,
-    IMapFrameValidator mapValidator) : IObservationProcessor
+    IMapFrameValidator mapValidator,
+    IObservationPolicy? observationPolicy = null,
+    SessionMode sessionMode = SessionMode.ReplayContinuous) : IObservationProcessor
 {
     private readonly IGameClockReader _clockReader =
         clockReader ?? throw new ArgumentNullException(nameof(clockReader));
     private readonly IMapFrameValidator _mapValidator =
         mapValidator ?? throw new ArgumentNullException(nameof(mapValidator));
+    private readonly IObservationPolicy _observationPolicy =
+        observationPolicy ?? new ObservationPolicy();
+    private readonly SessionMode _sessionMode = sessionMode;
 
     public async ValueTask<TimelineObservation> ProcessAsync(
         SourceFrame sourceFrame,
@@ -24,15 +29,11 @@ public sealed class ObservationProcessor(
             await _clockReader.ReadAsync(regions.Clock, cancellationToken).ConfigureAwait(false);
         MapValidationResult mapResult =
             await _mapValidator.ValidateAsync(regions.Minimap, cancellationToken).ConfigureAwait(false);
-        bool isValid =
-            clockResult.Status == ClockReadingStatus.Valid &&
-            mapResult.Status == MapFrameStatus.Valid;
-
-        return new TimelineObservation(
-            sourceFrame.SourceTimestamp,
-            isValid ? clockResult.GameTime : null,
-            isValid ? ObservationStatus.Valid : ObservationStatus.Unavailable,
+        return _observationPolicy.Create(
+            sourceFrame,
+            regions.Minimap,
             clockResult,
-            mapResult);
+            mapResult,
+            _sessionMode);
     }
 }

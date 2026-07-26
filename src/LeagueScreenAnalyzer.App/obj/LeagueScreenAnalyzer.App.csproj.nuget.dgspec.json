@@ -338,6 +338,9 @@
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
+              "C:\\Users\\Owner\\projects\\lol\\league-screen-analyzer\\src\\LeagueScreenAnalyzer.Capture\\LeagueScreenAnalyzer.Capture.csproj": {
+                "projectPath": "C:\\Users\\Owner\\projects\\lol\\league-screen-analyzer\\src\\LeagueScreenAnalyzer.Capture\\LeagueScreenAnalyzer.Capture.csproj"
+              },
               "C:\\Users\\Owner\\projects\\lol\\league-screen-analyzer\\src\\LeagueScreenAnalyzer.Core\\LeagueScreenAnalyzer.Core.csproj": {
                 "projectPath": "C:\\Users\\Owner\\projects\\lol\\league-screen-analyzer\\src\\LeagueScreenAnalyzer.Core\\LeagueScreenAnalyzer.Core.csproj"
               }

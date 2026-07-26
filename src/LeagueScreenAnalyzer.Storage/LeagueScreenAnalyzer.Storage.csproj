@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\LeagueScreenAnalyzer.Core\LeagueScreenAnalyzer.Core.csproj" />
+    <ProjectReference Include="..\LeagueScreenAnalyzer.Capture\LeagueScreenAnalyzer.Capture.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

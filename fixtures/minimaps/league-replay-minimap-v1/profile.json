@@ -1,0 +1,23 @@
+{
+  "id": "league-replay-minimap-v1",
+  "displayName": "League Replay Minimap (calibration)",
+  "version": 1,
+  "targetMode": "replayContinuous",
+  "expectedAspectRatio": 1.0,
+  "aspectRatioTolerance": 0.08,
+  "normalizedWidth": 128,
+  "normalizedHeight": 128,
+  "minimumCropWidth": 96,
+  "minimumCropHeight": 96,
+  "minimumLuminanceVariance": 120.0,
+  "minimumLuminanceSpread": 45.0,
+  "maximumNearBlackPercentage": 0.72,
+  "maximumNearUniformPercentage": 0.72,
+  "minimumEdgeDensity": 0.025,
+  "maximumEdgeDensity": 0.48,
+  "minimumBorderConsistency": 0.20,
+  "minimumCornerConsistency": 0.18,
+  "minimumConfidence": 0.55,
+  "provenance": "Deterministic synthetic structural calibration; requires explicitly labeled real replay samples.",
+  "calibratedForCanonicalRecording": false
+}

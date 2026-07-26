@@ -24,10 +24,31 @@ public sealed class FixtureMapFrameValidator : IMapFrameValidator
         }
 
         return payload.MapVisible
-            ? ValueTask.FromResult(new MapValidationResult(MapFrameStatus.Valid, 1, []))
+            ? ValueTask.FromResult(new MapValidationResult(
+                MapFrameStatus.Valid,
+                1,
+                [],
+                "fixture-map-v1",
+                new MapFeatureValues(
+                    minimapFrame.Width,
+                    minimapFrame.Height,
+                    minimapFrame.Width / (double)minimapFrame.Height,
+                    128,
+                    100,
+                    0,
+                    255,
+                    0,
+                    0,
+                    0.1,
+                    1,
+                    1),
+                minimapFrame.SourceFrameSequence,
+                minimapFrame.SourceTimestamp))
             : ValueTask.FromResult(new MapValidationResult(
                 MapFrameStatus.Missing,
                 0,
-                ["Minimap region is not visible."]));
+                ["Minimap region is not visible."],
+                sourceFrameSequence: minimapFrame.SourceFrameSequence,
+                sourceTimestamp: minimapFrame.SourceTimestamp));
     }
 }
