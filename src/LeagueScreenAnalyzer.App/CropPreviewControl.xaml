@@ -1,0 +1,14 @@
+<UserControl x:Class="LeagueScreenAnalyzer.App.CropPreviewControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Border Background="#FF111827" ClipToBounds="True">
+        <Viewbox Stretch="Uniform"
+                 StretchDirection="Both"
+                 HorizontalAlignment="Stretch"
+                 VerticalAlignment="Stretch">
+            <Image Source="{Binding ImageSource, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                   Stretch="None"
+                   SnapsToDevicePixels="True" />
+        </Viewbox>
+    </Border>
+</UserControl>

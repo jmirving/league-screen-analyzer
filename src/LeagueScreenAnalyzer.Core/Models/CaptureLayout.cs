@@ -2,12 +2,23 @@ namespace LeagueScreenAnalyzer.Core.Models;
 
 public sealed record CaptureLayout
 {
-    public CaptureLayout(string name, NormalizedRegion clockRegion, NormalizedRegion minimapRegion)
+    public CaptureLayout(
+        string name,
+        NormalizedRegion clockRegion,
+        NormalizedRegion minimapRegion,
+        double? sourceAspectRatio = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        if (sourceAspectRatio is not null
+            && (!double.IsFinite(sourceAspectRatio.Value) || sourceAspectRatio <= 0))
+        {
+            throw new ArgumentOutOfRangeException(nameof(sourceAspectRatio));
+        }
+
         Name = name;
         ClockRegion = clockRegion ?? throw new ArgumentNullException(nameof(clockRegion));
         MinimapRegion = minimapRegion ?? throw new ArgumentNullException(nameof(minimapRegion));
+        SourceAspectRatio = sourceAspectRatio;
     }
 
     public string Name { get; }
@@ -15,4 +26,6 @@ public sealed record CaptureLayout
     public NormalizedRegion ClockRegion { get; }
 
     public NormalizedRegion MinimapRegion { get; }
+
+    public double? SourceAspectRatio { get; }
 }

@@ -10,11 +10,11 @@ none
 false
 TRACE;DEBUG;NET;NET8_0;NETCOREAPP
 C:\Users\Owner\projects\lol\league-screen-analyzer\src\LeagueScreenAnalyzer.App\App.xaml
-11407045341
+2662084988
 
-7890070300
+101526934910
 211-537071517
-MainWindow.xaml;
+CropPreviewControl.xaml;MainWindow.xaml;
 
 False
 

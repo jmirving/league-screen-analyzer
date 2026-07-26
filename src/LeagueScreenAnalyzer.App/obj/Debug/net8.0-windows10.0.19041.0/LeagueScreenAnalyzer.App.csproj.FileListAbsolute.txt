@@ -38,3 +38,7 @@ C:\Users\Owner\projects\lol\league-screen-analyzer\src\LeagueScreenAnalyzer.App\
 C:\Users\Owner\projects\lol\league-screen-analyzer\src\LeagueScreenAnalyzer.App\obj\Debug\net8.0-windows10.0.19041.0\LeagueScreenAnalyzer.App.pdb
 C:\Users\Owner\projects\lol\league-screen-analyzer\src\LeagueScreenAnalyzer.App\obj\Debug\net8.0-windows10.0.19041.0\LeagueScreenAnalyzer.App.genruntimeconfig.cache
 C:\Users\Owner\projects\lol\league-screen-analyzer\src\LeagueScreenAnalyzer.App\obj\Debug\net8.0-windows10.0.19041.0\ref\LeagueScreenAnalyzer.App.dll
+C:\Users\Owner\projects\lol\league-screen-analyzer\src\LeagueScreenAnalyzer.App\obj\Debug\net8.0-windows10.0.19041.0\CropPreviewControl.baml
+C:\Users\Owner\projects\lol\league-screen-analyzer\src\LeagueScreenAnalyzer.App\obj\Debug\net8.0-windows10.0.19041.0\CropPreviewControl.g.cs
+C:\Users\Owner\projects\lol\league-screen-analyzer\src\LeagueScreenAnalyzer.App\obj\Debug\net8.0-windows10.0.19041.0\GeneratedInternalTypeHelper.g.cs
+C:\Users\Owner\projects\lol\league-screen-analyzer\src\LeagueScreenAnalyzer.App\obj\Debug\net8.0-windows10.0.19041.0\LeagueScreenAnalyzer.App_MarkupCompile.lref

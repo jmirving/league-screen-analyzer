@@ -1,12 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
 
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
+    <UseWPF>true</UseWPF>
   </PropertyGroup>
 
   <ItemGroup>
@@ -28,6 +29,7 @@
     <ProjectReference Include="..\..\src\LeagueScreenAnalyzer.Core\LeagueScreenAnalyzer.Core.csproj" />
     <ProjectReference Include="..\..\src\LeagueScreenAnalyzer.Imaging\LeagueScreenAnalyzer.Imaging.csproj" />
     <ProjectReference Include="..\..\src\LeagueScreenAnalyzer.Storage\LeagueScreenAnalyzer.Storage.csproj" />
+    <ProjectReference Include="..\..\src\LeagueScreenAnalyzer.App\LeagueScreenAnalyzer.App.csproj" />
   </ItemGroup>
 
 </Project>
