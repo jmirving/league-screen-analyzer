@@ -64,7 +64,7 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
-                <RowDefinition Height="2*" />
+                <RowDefinition Height="5*" />
                 <RowDefinition Height="*" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
@@ -138,11 +138,23 @@
                     </Grid>
                 </Border>
 
-                <ScrollViewer Grid.Column="2"
+                <ScrollViewer x:Name="RightControlsScrollViewer"
+                              Grid.Column="2"
                               VerticalScrollBarVisibility="Auto"
-                              HorizontalScrollBarVisibility="Disabled">
-                  <StackPanel>
-                    <GroupBox Header="Regions" Padding="10">
+                              HorizontalScrollBarVisibility="Disabled"
+                              AutomationProperties.Name="Configuration and clock recognition">
+                  <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <GroupBox x:Name="RegionsGroup"
+                              Grid.Row="1"
+                              Header="Regions"
+                              Padding="10"
+                              Margin="0,12,0,0">
                         <StackPanel>
                             <TextBlock FontWeight="SemiBold" Text="{Binding EditMode}" />
                             <TextBlock Margin="0,3,0,10" Foreground="DimGray"
@@ -184,7 +196,11 @@
                         </StackPanel>
                     </GroupBox>
 
-                    <GroupBox Header="Layouts" Padding="10" Margin="0,12,0,0">
+                    <GroupBox x:Name="LayoutsGroup"
+                              Grid.Row="2"
+                              Header="Layouts"
+                              Padding="10"
+                              Margin="0,12,0,0">
                         <StackPanel>
                             <ComboBox ItemsSource="{Binding AvailableSavedLayouts}"
                                       SelectedItem="{Binding SelectedSavedLayout}"
@@ -204,7 +220,123 @@
                                        Text="{Binding LayoutValidationMessage}" />
                         </StackPanel>
                     </GroupBox>
-                  </StackPanel>
+
+                    <GroupBox x:Name="ClockRecognitionGroup"
+                              Grid.Row="0"
+                              Header="Clock Recognition"
+                              Padding="7"
+                              AutomationProperties.Name="Clock Recognition">
+                        <StackPanel>
+                            <CheckBox x:Name="RecognitionEnabledToggle"
+                                      IsChecked="{Binding RecognitionEnabled}"
+                                      Content="Enable recognition" />
+                            <TextBlock Margin="0,8,0,2" FontWeight="SemiBold" Text="Profile" />
+                            <ComboBox x:Name="ClockProfileSelector"
+                                      ItemsSource="{Binding AvailableClockProfiles}"
+                                      DisplayMemberPath="Name"
+                                      SelectedValuePath="Id"
+                                      SelectedValue="{Binding SelectedClockProfileId}"
+                                      IsEnabled="{Binding CanConfigureClockRecognition}"
+                                      AutomationProperties.Name="Clock recognition profile" />
+                            <TextBlock Margin="0,8,0,2" FontWeight="SemiBold"
+                                       Text="Fixed playback speed" />
+                            <ComboBox x:Name="PlaybackSpeedSelector"
+                                      ItemsSource="{Binding PlaybackSpeeds}"
+                                      SelectedItem="{Binding SelectedPlaybackSpeed}"
+                                      IsEnabled="{Binding CanConfigureClockRecognition}"
+                                      AutomationProperties.Name="Playback speed" />
+                            <TextBlock Margin="0,4,0,8" Foreground="DimGray">
+                                <Run Text="Selected: " />
+                                <Run Text="{Binding PlaybackSpeedDisplay, Mode=OneWay}"
+                                     FontWeight="Bold" />
+                                <Run Text=" (locked during capture)" />
+                            </TextBlock>
+                            <Border Padding="8" Background="#FFF3F4F6" CornerRadius="3">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+                                    <TextBlock FontWeight="SemiBold" Text="Current status:" />
+                                    <TextBlock x:Name="ClockStatusText"
+                                               Grid.Column="1" Margin="7,0,0,0"
+                                               FontWeight="Bold" Text="{Binding ClockStatus}">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Foreground" Value="#FFB91C1C" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding ClockStatus}" Value="Valid">
+                                                        <Setter Property="Foreground" Value="#FF15803D" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                    <TextBlock Grid.Row="1" FontWeight="SemiBold"
+                                               Text="Recognized candidate:" />
+                                    <TextBlock x:Name="ClockRecognizedCandidateText"
+                                               Grid.Row="1" Grid.Column="1" Margin="7,0,0,0"
+                                               FontFamily="Consolas" Text="{Binding ClockRecognizedText}" />
+                                    <TextBlock Grid.Row="2" FontWeight="SemiBold"
+                                               Text="Accepted game time:" />
+                                    <TextBlock x:Name="ClockAcceptedGameTimeText"
+                                               Grid.Row="2" Grid.Column="1" Margin="7,0,0,0"
+                                               FontFamily="Consolas" Text="{Binding ClockAcceptedTime}" />
+                                    <TextBlock Grid.Row="3" FontWeight="SemiBold"
+                                               Text="Historical game time:" />
+                                    <TextBlock x:Name="ClockHistoricalGameTimeText"
+                                               Grid.Row="3" Grid.Column="1" Margin="7,0,0,0"
+                                               FontFamily="Consolas" Text="{Binding ClockHistoricalTime}" />
+                                    <TextBlock Grid.Row="4" FontWeight="SemiBold" Text="Confidence:" />
+                                    <TextBlock x:Name="ClockConfidenceText"
+                                               Grid.Row="4" Grid.Column="1" Margin="7,0,0,0"
+                                               Text="{Binding ClockConfidence}" />
+                                    <TextBlock Grid.Row="5" FontWeight="SemiBold" Text="Cadence:" />
+                                    <TextBlock Grid.Row="5" Grid.Column="1" Margin="7,0,0,0"
+                                               Text="{Binding RecognitionCadence}" />
+                                    <TextBlock Grid.Row="6" FontWeight="SemiBold" Text="Accepted source:" />
+                                    <TextBlock Grid.Row="6" Grid.Column="1" Margin="7,0,0,0"
+                                               FontFamily="Consolas" Text="{Binding ClockLastAcceptedSourceTime}" />
+                                    <TextBlock x:Name="ClockDiagnosticText"
+                                               Grid.Row="7" Grid.ColumnSpan="2" Margin="0,6,0,0"
+                                               TextWrapping="Wrap" Foreground="DimGray"
+                                               Text="{Binding ClockDiagnostic}"
+                                               AutomationProperties.Name="Diagnostic or rejection reason" />
+                                </Grid>
+                            </Border>
+                            <TextBlock Margin="0,8,0,2" FontWeight="SemiBold"
+                                       Text="Actual clock value" />
+                            <TextBox x:Name="ActualClockValueTextBox"
+                                     Text="{Binding ActualClockValue, UpdateSourceTrigger=PropertyChanged}"
+                                     AutomationProperties.Name="Actual clock value"
+                                     ToolTip="Enter the visible replay time as M:SS or MM:SS." />
+                            <TextBlock x:Name="ClockLabelValidationText"
+                                       Margin="0,3,0,0"
+                                       Foreground="#FFB91C1C"
+                                       TextWrapping="Wrap"
+                                       Text="{Binding ClockLabelValidationMessage}"
+                                       AutomationProperties.LiveSetting="Polite" />
+                            <CheckBox x:Name="SaveUnlabeledClockSampleCheckBox"
+                                      Margin="0,7,0,0"
+                                      IsChecked="{Binding SaveUnlabeledClockSample}"
+                                      Content="Save as unlabeled diagnostic only" />
+                            <Button x:Name="SaveClockSampleButton"
+                                    Margin="0,8,0,0" Padding="12,5"
+                                    Command="{Binding SaveClockSampleCommand}"
+                                    Content="Save Clock Sample" />
+                        </StackPanel>
+                    </GroupBox>
+                  </Grid>
                 </ScrollViewer>
             </Grid>
 

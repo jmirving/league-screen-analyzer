@@ -33,6 +33,18 @@ if not exist "%VERIFY_OUTPUT%\summary.json" (
     goto :failure
 )
 
+set "CLOCK_OUTPUT=artifacts\clock-evaluation"
+if exist "%CLOCK_OUTPUT%" rmdir /s /q "%CLOCK_OUTPUT%"
+
+echo Evaluating committed clock fixtures...
+dotnet run --project src\LeagueScreenAnalyzer.Cli --no-build -- evaluate-clock --profile league-replay-v1 --manifest fixtures\clocks\synthetic-seven-segment\manifest.json --output "%CLOCK_OUTPUT%"
+if errorlevel 1 goto :failure
+
+if not exist "%CLOCK_OUTPUT%\clock-evaluation.json" (
+    echo Missing expected clock evaluation: %CLOCK_OUTPUT%\clock-evaluation.json
+    goto :failure
+)
+
 echo Verification succeeded.
 popd
 exit /b 0

@@ -6,7 +6,8 @@ public sealed record CaptureLayout
         string name,
         NormalizedRegion clockRegion,
         NormalizedRegion minimapRegion,
-        double? sourceAspectRatio = null)
+        double? sourceAspectRatio = null,
+        string? clockProfileId = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
         if (sourceAspectRatio is not null
@@ -19,6 +20,7 @@ public sealed record CaptureLayout
         ClockRegion = clockRegion ?? throw new ArgumentNullException(nameof(clockRegion));
         MinimapRegion = minimapRegion ?? throw new ArgumentNullException(nameof(minimapRegion));
         SourceAspectRatio = sourceAspectRatio;
+        ClockProfileId = string.IsNullOrWhiteSpace(clockProfileId) ? null : clockProfileId;
     }
 
     public string Name { get; }
@@ -28,4 +30,6 @@ public sealed record CaptureLayout
     public NormalizedRegion MinimapRegion { get; }
 
     public double? SourceAspectRatio { get; }
+
+    public string? ClockProfileId { get; }
 }

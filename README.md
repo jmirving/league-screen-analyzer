@@ -1,99 +1,145 @@
 # League Screen Analyzer
 
-League Screen Analyzer is a Windows-only .NET 8 application that captures a user-selected window and lets the user configure exactly two source-relative regions: **CLOCK** and **MINIMAP**. The existing `Windows.Graphics.Capture` picker, bounded latest-frame delivery, lifecycle handling, and reusable WPF preview remain the capture foundation.
-
-No OCR, automatic region discovery, minimap validation, replay control, or video recording is included in this milestone.
+League Screen Analyzer is a Windows-only .NET 8 application that captures a selected window, previews normalized **CLOCK** and **MINIMAP** regions, and performs precision-first recognition of a visible League game clock. Missing or unsupported image evidence is reported as unavailable; temporal expectation never creates a timestamp.
 
 ## Requirements
 
-- Windows 10 version 2004 (build 19041) or later, or Windows 11
-- Compatible Direct3D 11 graphics hardware and an interactive desktop session
-- .NET 8 SDK to build from source
+- Windows 10 2004 (build 19041) or later, or Windows 11
+- Direct3D 11 graphics and an interactive desktop session
+- .NET 8 SDK
 
-## Region workflow
+No Python, FFmpeg, SQLite, OpenCV, general OCR, replay control, or minimap analysis is used.
 
-Run:
+## Run and configure
 
 ```text
 dotnet run --project src\LeagueScreenAnalyzer.App
 ```
 
-Then:
+1. Select a visible replay window.
+2. Create or load a valid CLOCK region (and MINIMAP if saving a layout).
+3. Select **League Replay HUD** (synthetic v1) or **League Replay HUD (real calibrated v2)** and a fixed playback speed.
+4. Leave **Enable recognition** checked.
+5. Inspect current status, recognized text, accepted time, explicitly historical last-accepted time, confidence, cadence, and rejection diagnostic.
+6. Enter the ground-truth visible time in **Actual clock value** as `M:SS` or `MM:SS`.
+7. Use **Save Clock Sample** to write one labeled calibration sample. Select **Save as unlabeled diagnostic only** only when intentionally collecting evidence without ground truth.
 
-1. Select a visible window with **Select Window**.
-2. Choose **Edit** beside CLOCK or MINIMAP.
-3. If that region is missing, drag inside the rendered video to create it.
-4. Drag inside a region to move it. Select it and drag any of the eight white handles to resize it.
-5. Use **Escape** to cancel the active drag, **Delete** or **Clear** to remove the selected semantic region.
-6. Confirm both enlarged crop previews update and the normalized coordinates remain stable while the analyzer window resizes.
-7. Enter a layout name and choose **Save As**. Enable the explicit overwrite checkbox to replace an existing name.
-8. Select a saved layout to load or delete it. A stopped or unexpectedly closed source does not remove the active/unsaved regions.
-9. Use **Save Diagnostic Bundle** to write the current evidence under `artifacts`.
+Playback-speed choices are 0.25x, 0.5x, 1x, 2x, 4x, and 8x. Profile and speed are locked during active capture. Recognition starts only when capture is active and CLOCK is configured, and stops with capture or when recognition is disabled.
 
-Dragging in letterbox or pillarbox bars does not create a region. Editing is enabled only while capture is active and has produced source dimensions. CLOCK uses a gold border and MINIMAP uses blue, but both also have permanent text labels so identity never depends on color.
+Region editing remains source-normalized (`x`, `y`, `width`, `height` in `[0,1]`). Drag to create/move, use the eight handles to resize, Escape to cancel, and Delete/Clear to remove. Preview coordinates remain presentation-only and letterbox/pillarbox clicks are rejected.
 
-## Normalized coordinates
+## Constrained recognition
 
-The authoritative region values are source-relative:
+The production pipeline is:
 
 ```text
-x, y, width, height ∈ [0, 1]
-width > 0, height > 0
-x + width <= 1, y + height <= 1
+copied BGRA CLOCK crop
+  -> integer luminance
+  -> contrast-range check
+  -> fixed or Otsu threshold
+  -> configured foreground polarity
+  -> column-projection character localization
+  -> normalized 5x7 digit-template comparison
+  -> constrained M:SS/MM:SS parse
+  -> confidence threshold
+  -> independent temporal validation
+  -> Valid or unavailable status
 ```
 
-WPF device-independent preview coordinates are derived presentation state only. `PreviewCoordinateMapper` computes a uniform scale and centered rendered-video viewport from the source dimensions and preview-control dimensions. It converts normalized points/regions through that viewport and rejects points outside it. Source resolution changes therefore recalculate overlay and crop pixels without changing normalized regions.
+This is deliberately not broad OCR. `ConstrainedClockImageRecognizer` returns image-supported candidates and diagnostics. `ClockTemporalValidator` accepts or rejects those candidates using history, source time, fixed playback speed, and profile tolerances. It never changes a recognized digit and never emits expected time when the crop is unreadable.
 
-## Capture layouts
+Clock states include `Valid`, `NotConfigured`, `NotVisible`, `Unreadable`, `Malformed`, `LowConfidence`, `Implausible`, `Backward`, and `Discontinuous`. A rejected `ClockReading` has no canonical `GameTime`; its raw candidate and nullable candidate time remain diagnostic evidence, while `LastAcceptedGameTime` is explicitly historical.
 
-Layouts are JSON schema version 1:
+## Profiles and templates
 
-```json
-{
-  "schemaVersion": 1,
-  "name": "LCK Broadcast 2026",
-  "sourceAspectRatio": 1.7777777777777777,
-  "clockRegion": {
-    "x": 0.42,
-    "y": 0.01,
-    "width": 0.16,
-    "height": 0.06
-  },
-  "minimapRegion": {
-    "x": 0.81,
-    "y": 0.7,
-    "width": 0.18,
-    "height": 0.28
-  }
-}
-```
+The synthetic mechanics profile identifier is `league-replay-v1`, display name **League Replay HUD**, version 1. It defines pattern/character bounds, polarity, threshold strategy, confidence floor, maximum game time, playback speed, temporal tolerances, processing cap, and `ReplayContinuous` mode. Capture-layout schema version 1 may optionally reference the stable profile identifier as `clockProfileId`; profile data itself is not embedded in layout JSON.
 
-`sourceAspectRatio` is optional compatibility metadata; both region objects are required. Normal application storage is:
+The initial classifier masks are deterministic 5x7 seven-segment mechanics templates in `SevenSegmentTemplates.cs`. Their provenance is explicit: they are synthetic canonical masks and remain available for mechanical tests.
+
+`league-replay-v2` supplements v1 with 65 small real League-derived templates generated from 13 explicitly labeled diagnostic bundles. Its manifest records source bundle, full label, character position, glyph, and preprocessing version for every template. Digit 8 has no real evidence; digits 4, 6, and 7 have only one independent source bundle each. The profile is calibrated evidence, not a production-readiness claim.
+
+To add a real template/profile revision:
+
+1. Pause or inspect the replay at the desired frame and type its visible time into **Actual clock value**.
+2. Capture the small crop with **Save Clock Sample**. The normalized human label and parsed seconds/milliseconds are retained in `result.json`.
+3. Select examples covering every digit, minute rollover, background variation, scale, and compression.
+4. Evaluate the saved bundles directly with `evaluate-clock --diagnostics`.
+5. Derive/replace classifier references only from the retained labeled evidence.
+6. Increment the profile version and rerun the evaluator.
+
+Never infer calibration labels from temporal expectation alone.
+
+## Temporal policy
+
+`ReplayContinuous` implements:
+
+- first above-threshold parsed candidate acceptance;
+- repeated displayed seconds;
+- ordinary ticks and minute rollover;
+- expected game advance = source elapsed × configured playback speed;
+- whole-second rendering tolerance from the profile;
+- rejection of backward candidates;
+- rejection of forward movement beyond the expected advance plus tolerance;
+- source-timestamp regression as `Discontinuous`;
+- brief unavailable frames without losing the historical anchor;
+- a long unavailable interval as `Discontinuous`, not automatic repair.
+
+`BroadcastVod` exists as a policy seam but complete interruption/gap anchoring is intentionally not implemented.
+
+## Bounded processing
+
+Capture already retains only the latest pending full frame. The UI synchronously copies the small CLOCK crop before pooled frame disposal, then submits it to `ClockRecognitionWorker`, which also has only one replaceable pending sample. Processing is off the dispatcher. Its target rate is `min(profile cap, 4 × playback speed)` samples per source second, with a 12 samples/second initial cap. Stale pending crops are replaced and preview rendering never waits for recognition.
+
+## Diagnostics and evaluation
+
+One **Save Clock Sample** request writes:
 
 ```text
-%LOCALAPPDATA%\LeagueScreenAnalyzer\CaptureLayouts
+artifacts/clock-samples/clock-sample-.../
+  original-clock.bmp
+  normalized-clock.pgm
+  segment-00.pgm ...
+  result.json
 ```
 
-Tests and development composition can supply another directory to `JsonCaptureLayoutStore`. Saves use a same-directory temporary file followed by atomic replacement where supported. Malformed JSON, unknown fields, unsupported versions, missing coordinates, invalid bounds, filename/path misuse, and implicit overwrites are rejected with visible errors.
+For a labeled save, `result.json` contains `sampleKind: "labeled"`, the normalized user-supplied `explicitLabel`, and `explicitLabelSeconds`/`explicitLabelMilliseconds`, in addition to candidates and character confidence, accepted/rejected status and reason, temporal-history summary, profile/version, playback speed, source sequence/timestamp, and actual cadence. A successful labeled save shows the bundle path and clears the label field; it never infers or increments a subsequent label.
 
-A loaded/saved layout retains its normalized regions for every source. If the new source aspect ratio differs by **more than 2% relative to the stored ratio**, the UI shows a compatibility warning but does not clear, stretch, or reshape either region.
+Blank or malformed values cannot be saved as labeled samples. Surrounding whitespace is ignored, seconds must be `00` through `59`, and the UI gives a corrective message. An unlabeled bundle is written only after selecting **Save as unlabeled diagnostic only** with an empty label field; its JSON records `sampleKind: "unlabeledDiagnostic"` and a null `explicitLabel`. The existing capture diagnostic bundle remains available for full-frame/layout inspection. Nothing writes continuously.
 
-## Crop and diagnostic behavior
-
-The capture session still permits only one pending CPU frame. During its synchronous frame notification, the WPF adapter copies the full BGRA frame into a reusable full-size `WriteableBitmap` and copies each configured rectangle into a reusable crop `WriteableBitmap`. Crop bitmaps are recreated only when their pixel dimensions change. There is no secondary crop queue, per-frame persistence, OCR, or OpenCV dependency; stale source frames are already replaced by the bounded capture queue.
-
-One explicit diagnostic request creates:
+Evaluate a labeled manifest with:
 
 ```text
-artifacts/capture-diagnostic-YYYYMMDD-HHMMSS-fff/
-  full-frame.png
-  annotated-frame.png
-  clock-crop.png          (when CLOCK is configured)
-  minimap-crop.png        (when MINIMAP is configured)
-  active-layout.json
+dotnet run --project src/LeagueScreenAnalyzer.Cli -- evaluate-clock \
+  --profile league-replay-v1 \
+  --manifest fixtures/clocks/synthetic-seven-segment/manifest.json \
+  --output artifacts/clock-evaluation
 ```
 
-The annotated frame is rendered at source pixel dimensions with labeled rectangles.
+Evaluate all labeled diagnostic bundles beneath the normal app output directory directly (unlabeled bundles are deterministically skipped):
+
+```text
+dotnet run --project src/LeagueScreenAnalyzer.Cli -- analyze-clock-diagnostics \
+  --profile league-replay-v1 \
+  --diagnostics artifacts/clock-samples \
+  --output artifacts/clock-calibration-analysis
+
+dotnet run --project src/LeagueScreenAnalyzer.Cli -- build-clock-profile \
+  --base-profile league-replay-v1 \
+  --profile-id league-replay-v2 \
+  --diagnostics artifacts/clock-samples \
+  --output-profile fixtures/clocks/league-replay-v2
+
+dotnet run --project src/LeagueScreenAnalyzer.Cli -- evaluate-clock \
+  --profile league-replay-v2 \
+  --diagnostics artifacts/clock-samples \
+  --output artifacts/clock-evaluation-v2
+```
+
+The profile stored in each diagnostic bundle is capture provenance: it records which recognizer and preprocessing produced the original result. It is not an evaluation restriction. `evaluate-clock --profile league-replay-v3` always decodes the saved `original-clock.bmp`, runs v3, and compares the new result only with the explicit user label. Reports keep `capturedWithProfile`, `evaluatedWithProfile`, the original candidate/status, and the new candidate/status separate; evaluation never rewrites `result.json`.
+
+Likewise, `--base-profile` selects inherited recognition settings and the preprocessing/segmentation workflow used to build a new profile. Each source crop is reprocessed with that workflow and aligned to its explicit label; stored old segments and recognized candidates are not treated as truth. Thus v1 and v2 captures can be mixed when constructing v3. `compatibility.json` records accepted and rejected samples, source capture profiles, target profiles, and concrete failures such as missing/corrupt crops or ambiguous alignment.
+
+Old labeled samples are intentionally reusable across profile versions. Users do not need to edit diagnostic JSON or recapture the same CLOCK image for every new profile. Diagnostic evaluation writes separately labeled apparent-training and leave-one-sample-out reports for every template-backed profile. It resets temporal state for every independent crop and reports visual versus temporal rejection counts.
 
 ## Build and test
 
@@ -105,27 +151,34 @@ scripts\verify.cmd
 git diff --check
 ```
 
-Tests cover domain invariants, matching and mismatched preview aspect ratios, letterbox/pillarbox rejection, coordinate round trips, create/move/all resize directions, boundary and minimum-size enforcement, cancellation, unsaved state, JSON persistence failures and overwrite/delete behavior, capture lifecycle preservation, source resize behavior, aspect compatibility, existing capture lifecycle, and bounded latest-frame semantics.
+Tests cover parsing, preprocessing, polarity, segmentation, separator/template matching, candidate ordering/confidence, missing/low-contrast crops, temporal history, minute rollover, failures, discontinuities, playback speeds, non-fabrication, bounded worker replacement, speed immutability, diagnostic writing, profile/layout persistence, evaluation, and all prior capture/editor/fixture behavior.
 
-## Project structure
+## Manual replay validation
 
-- `src/LeagueScreenAnalyzer.App` — WPF MVVM preview, overlay event forwarding, crop presentation, and diagnostic rendering
-- `src/LeagueScreenAnalyzer.Core` — domain records plus platform-neutral coordinate, edit, and compatibility services
-- `src/LeagueScreenAnalyzer.Capture` — fixtures, capture controller, bounded frame delivery, and Windows capture
-- `src/LeagueScreenAnalyzer.Storage` — JSON artifacts and named capture-layout persistence
-- `src/LeagueScreenAnalyzer.Cli` — deterministic fixture command
-- `src/LeagueScreenAnalyzer.Imaging` — reserved for later image processing
-- `tests/LeagueScreenAnalyzer.Tests` — deterministic unit and lifecycle tests
+Real validation must remain manual:
+
+1. configure/load CLOCK and select the replay window;
+2. select `league-replay-v1`, set 1x, and start capture;
+3. compare visible and recognized time for several minutes;
+4. check repeated seconds, minute rollovers, and unavailable-state presentation;
+5. type a visible value such as `3:40`, save it, open the reported `result.json`, and confirm `explicitLabel` is exactly `"3:40"`;
+6. repeat immediately before and after a minute boundary, entering each visible value independently;
+7. confirm malformed values and impossible seconds cannot be saved as labeled samples;
+8. confirm a blank label requires selecting **Save as unlabeled diagnostic only**, and that entering a label while that mode is selected asks you to clear it;
+9. run `evaluate-clock --diagnostics` over the saved root and inspect the report;
+10. repeat briefly at 0.25x or 0.5x and at 4x, then stop capture and confirm recognition work and the analyzer process exit cleanly.
+
+Do not use physical input automation for this verification.
 
 ## Known limitations
 
-- Capture uses GPU-to-CPU BGRA readback and WPF bitmap copies rather than a zero-copy D3D presentation bridge.
-- Protected or application-blocked content may be blank; HDR is requested as 8-bit BGRA.
-- Compatibility is intentionally an aspect-ratio warning, not proof that a different broadcast graphic uses the same positions.
-- Layout names map to local JSON filenames and therefore exclude invalid filename/path characters.
-- Crop presentation runs on the WPF dispatcher. The bounded upstream queue favors current frames over presenting every frame.
-- Diagnostic files are created only on request and are not a recording mechanism.
+- The checked-in templates and labeled images are synthetic mechanics fixtures, not real League replay samples.
+- Real League typography, antialiasing, scaling, shadows, and background treatment still require calibration.
+- Column projection assumes visible inter-character gaps; touching glyphs can become malformed.
+- `ReplayContinuous` intentionally refuses repair after long absence or discontinuity.
+- Crop correctness is user-configured; automatic CLOCK discovery is out of scope.
+- CPU BGRA readback/copy favors safe ownership over zero-copy throughput.
 
 ## Next milestone
 
-Read and validate the visible game clock from the configured Clock region, while treating missing or implausible readings as unavailable rather than guessing.
+Validate configured MINIMAP visibility, emit timestamped valid minimap observations, and create explicit unavailable intervals when the clock or minimap cannot be trusted.

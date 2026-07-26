@@ -1,7 +1,9 @@
 using System.Runtime.CompilerServices;
 using System.Threading.Channels;
 using LeagueScreenAnalyzer.Capture.Live;
+using LeagueScreenAnalyzer.Core.Abstractions;
 using LeagueScreenAnalyzer.Core.Models;
+using LeagueScreenAnalyzer.Imaging;
 
 namespace LeagueScreenAnalyzer.Tests;
 
@@ -127,6 +129,67 @@ public sealed class CaptureControllerTests
         Assert.Equal(TimeSpan.FromMilliseconds(250), controller.State.LatestTimestamp);
     }
 
+    [Fact]
+    public async Task HighRateFrameDelivery_DoesNotFailCapture()
+    {
+        FakeSession session = new("Replay");
+        await using CaptureController controller = new(new FakeSelector(
+            CaptureSelectionResult.Selected(session)));
+        const int frameCount = 5_000;
+        TaskCompletionSource lastDelivered =
+            new(TaskCreationOptions.RunContinuationsAsynchronously);
+        controller.FrameArrived += (_, args) =>
+        {
+            if (args.Frame.SequenceNumber == frameCount - 1)
+            {
+                lastDelivered.TrySetResult();
+            }
+        };
+        await controller.SelectWindowAsync(123);
+
+        for (int sequence = 0; sequence < frameCount; sequence++)
+        {
+            session.WriteFrame(sequence, TimeSpan.FromMilliseconds(sequence), 64, 36);
+        }
+
+        await lastDelivered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        Assert.Equal(CaptureStatus.Capturing, controller.State.Status);
+        Assert.Null(controller.State.ErrorMessage);
+        Assert.Equal(frameCount - 1, controller.State.LatestSequence);
+    }
+
+    [Fact]
+    public async Task RecognitionWorkerFailure_DoesNotBecomeCaptureSourceFailure()
+    {
+        FakeSession session = new("Replay");
+        await using CaptureController controller = new(new FakeSelector(
+            CaptureSelectionResult.Selected(session)));
+        await using ClockRecognitionWorker worker = new(
+            new FailingRecognizer(),
+            new ClockTemporalValidator(),
+            BuiltInClockProfiles.Get(BuiltInClockProfiles.LeagueReplayV1Id));
+        TaskCompletionSource<ClockRecognitionFailedEventArgs> recognitionFailed =
+            new(TaskCreationOptions.RunContinuationsAsynchronously);
+        worker.RecognitionFailed += (_, args) => recognitionFailed.TrySetResult(args);
+        controller.FrameArrived += (_, args) =>
+        {
+            worker.TrySubmit(ClockTestImages.Render(
+                "0:00",
+                sequence: args.Frame.SequenceNumber,
+                timestampSeconds: args.Frame.SourceTimestamp.TotalSeconds));
+        };
+        worker.Start();
+        await controller.SelectWindowAsync(123);
+
+        session.WriteFrame(1, TimeSpan.FromSeconds(1), 64, 36);
+
+        ClockRecognitionFailedEventArgs failure =
+            await recognitionFailed.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        Assert.Contains("recognition", failure.Exception.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(CaptureStatus.Capturing, controller.State.Status);
+        Assert.Null(controller.State.ErrorMessage);
+    }
+
     private sealed class FakeSelector(params CaptureSelectionResult[] selections) : ICaptureSessionSelector
     {
         private readonly Queue<CaptureSelectionResult> _selections = new(selections);
@@ -207,4 +270,14 @@ public sealed class CaptureControllerTests
     }
 
     private sealed class FakePayload : IFramePayload;
+
+    private sealed class FailingRecognizer : IClockImageRecognizer
+    {
+        public ValueTask<ClockRecognitionResult> RecognizeAsync(
+            ClockImage image,
+            ClockRecognitionProfile profile,
+            CancellationToken cancellationToken = default) =>
+            ValueTask.FromException<ClockRecognitionResult>(
+                new InvalidOperationException("recognition classifier failed"));
+    }
 }

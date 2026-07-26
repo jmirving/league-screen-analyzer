@@ -9,9 +9,23 @@ public enum RegionType
 public enum ClockReadingStatus
 {
     Valid,
+    NotConfigured,
     NotVisible,
+    Unreadable,
+    Malformed,
+    LowConfidence,
+    Implausible,
+    Backward,
+    Discontinuous,
     Unparseable,
     RejectedJump
+}
+
+public enum ClockTemporalStatus
+{
+    NotEvaluated,
+    Accepted,
+    Rejected
 }
 
 public enum MapFrameStatus
@@ -33,7 +47,15 @@ public sealed record ClockReading
         TimeSpan? gameTime,
         double confidence,
         ClockReadingStatus status,
-        string? diagnosticReason = null)
+        string? diagnosticReason = null,
+        string? rawRecognizedText = null,
+        ClockCandidate? bestCandidate = null,
+        double? imageRecognitionConfidence = null,
+        ClockTemporalStatus temporalStatus = ClockTemporalStatus.NotEvaluated,
+        long? sourceFrameSequence = null,
+        TimeSpan? sourceTimestamp = null,
+        TimeSpan? lastAcceptedGameTime = null,
+        TimeSpan? lastAcceptedSourceTimestamp = null)
     {
         ValidateConfidence(confidence);
 
@@ -61,6 +83,15 @@ public sealed record ClockReading
         Confidence = confidence;
         Status = status;
         DiagnosticReason = diagnosticReason;
+        RawRecognizedText = rawRecognizedText;
+        BestCandidate = bestCandidate;
+        ImageRecognitionConfidence = imageRecognitionConfidence ?? confidence;
+        ValidateConfidence(ImageRecognitionConfidence);
+        TemporalStatus = temporalStatus;
+        SourceFrameSequence = sourceFrameSequence;
+        SourceTimestamp = sourceTimestamp;
+        LastAcceptedGameTime = status == ClockReadingStatus.Valid ? gameTime : lastAcceptedGameTime;
+        LastAcceptedSourceTimestamp = status == ClockReadingStatus.Valid ? sourceTimestamp : lastAcceptedSourceTimestamp;
     }
 
     public TimeSpan? GameTime { get; }
@@ -70,6 +101,22 @@ public sealed record ClockReading
     public ClockReadingStatus Status { get; }
 
     public string? DiagnosticReason { get; }
+
+    public string? RawRecognizedText { get; }
+
+    public ClockCandidate? BestCandidate { get; }
+
+    public double ImageRecognitionConfidence { get; }
+
+    public ClockTemporalStatus TemporalStatus { get; }
+
+    public long? SourceFrameSequence { get; }
+
+    public TimeSpan? SourceTimestamp { get; }
+
+    public TimeSpan? LastAcceptedGameTime { get; }
+
+    public TimeSpan? LastAcceptedSourceTimestamp { get; }
 
     private static void ValidateConfidence(double confidence)
     {

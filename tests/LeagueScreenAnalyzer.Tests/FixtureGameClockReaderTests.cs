@@ -60,7 +60,7 @@ public sealed class FixtureGameClockReaderTests
         await reader.ReadAsync(CreateClockFrame(1, 0, "12:43"));
         ClockReading reading = await reader.ReadAsync(CreateClockFrame(2, 1000, "12:42"));
 
-        Assert.Equal(ClockReadingStatus.RejectedJump, reading.Status);
+        Assert.Equal(ClockReadingStatus.Backward, reading.Status);
         Assert.Null(reading.GameTime);
     }
 
@@ -72,7 +72,7 @@ public sealed class FixtureGameClockReaderTests
         await reader.ReadAsync(CreateClockFrame(1, 0, "12:43"));
         ClockReading reading = await reader.ReadAsync(CreateClockFrame(2, 1000, "20:00"));
 
-        Assert.Equal(ClockReadingStatus.RejectedJump, reading.Status);
+        Assert.Equal(ClockReadingStatus.Implausible, reading.Status);
     }
 
     internal static RegionFrame CreateClockFrame(

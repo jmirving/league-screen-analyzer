@@ -77,7 +77,7 @@ public interface ILiveCaptureSession : IFrameSource, IAsyncDisposable
     Task StopAsync(CancellationToken cancellationToken = default);
 }
 
-public sealed class Bgra32FramePayload : IFramePayload, IDisposable
+public sealed class Bgra32FramePayload : IClockImagePayload, IDisposable
 {
     private readonly Action? _release;
     private int _disposed;
@@ -91,6 +91,8 @@ public sealed class Bgra32FramePayload : IFramePayload, IDisposable
     }
 
     public Memory<byte> Pixels { get; private set; }
+
+    ReadOnlyMemory<byte> IClockImagePayload.BgraPixels => Pixels;
 
     public int Stride { get; }
 

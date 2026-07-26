@@ -79,6 +79,7 @@ public sealed class JsonCaptureLayoutStore : ICaptureLayoutStore
             SchemaVersion = CurrentSchemaVersion,
             Name = layout.Name,
             SourceAspectRatio = layout.SourceAspectRatio,
+            ClockProfileId = layout.ClockProfileId,
             ClockRegion = RegionDocument.From(layout.ClockRegion),
             MinimapRegion = RegionDocument.From(layout.MinimapRegion)
         };
@@ -217,7 +218,8 @@ public sealed class JsonCaptureLayoutStore : ICaptureLayoutStore
             document.MinimapRegion?.ToRegion("minimapRegion")
                 ?? throw new CaptureLayoutException(
                     $"Capture layout '{requestedName}' is missing minimapRegion."),
-            document.SourceAspectRatio);
+            document.SourceAspectRatio,
+            document.ClockProfileId);
     }
 
     private string GetPath(string name)
@@ -242,6 +244,8 @@ public sealed class JsonCaptureLayoutStore : ICaptureLayoutStore
         public string? Name { get; init; }
 
         public double? SourceAspectRatio { get; init; }
+
+        public string? ClockProfileId { get; init; }
 
         public RegionDocument? ClockRegion { get; init; }
 

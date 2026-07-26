@@ -2,97 +2,118 @@
 
 ## Dependency direction
 
-`LeagueScreenAnalyzer.Core` stays independent of WPF, Win32, WinRT, Direct3D, and `Windows.Graphics.Capture`. It owns `NormalizedRegion`, `CaptureLayout`, semantic `RegionType`, coordinate primitives, `PreviewCoordinateMapper`, `RegionEditor`, and aspect-ratio compatibility policy.
+`LeagueScreenAnalyzer.Core` owns platform-neutral frames, capture layouts, `ClockReading`, candidate/profile/diagnostic records, manual clock-label parsing, and recognition/validation interfaces. It has no WPF, WinRT, Direct3D, or presentation bitmap dependency.
 
-`LeagueScreenAnalyzer.Capture` preserves the existing multi-target architecture. Its plain .NET target contains fixture processing, lifecycle contracts, `CaptureController`, and bounded latest-frame delivery; its Windows target adds the native picker, D3D device, frame pool, and CPU readback.
+`LeagueScreenAnalyzer.Imaging` implements constrained pixel recognition, parsing, profile catalog, temporal validation, bounded recognition work, diagnostic writing, and the `IGameClockReader` orchestrator. It depends only on Core and adds no image-processing package.
 
-`LeagueScreenAnalyzer.Storage` persists schema-versioned layouts without a UI dependency. `LeagueScreenAnalyzer.App` composes those services, marshals frames to WPF, owns reusable display bitmaps, and renders derived overlay geometry. `MainWindow` code-behind only forwards pointer/size/key events and supplies the HWND; edit and capture behavior remain outside it.
+`LeagueScreenAnalyzer.Capture` retains Windows capture and fixture processing. Its BGRA payload implements Core's read-only `IClockImagePayload` boundary. `LeagueScreenAnalyzer.App` copies pixels into WPF bitmaps and an independently owned CLOCK buffer. `Storage` owns layout/session JSON, and `Cli` owns fixture and clock-evaluation commands.
 
-## Capture and presentation flow
-
-```text
-GraphicsCapturePicker initialized with WPF HWND
-  → WindowsCaptureSession
-  → Direct3D11CaptureFramePool
-  → SoftwareBitmap GPU-to-CPU copy
-  → pooled BGRA memory
-  → LatestFrameQueue (one pending frame, stale frame disposed)
-  → CaptureController synchronous FrameArrived notification
-  ├─→ reusable full-frame WriteableBitmap
-  ├─→ reusable CLOCK crop WriteableBitmap
-  └─→ reusable MINIMAP crop WriteableBitmap
-```
-
-The controller owns each delivered payload through the synchronous notification and disposes it immediately afterward. The UI copies pixels before returning and never retains pooled memory. Crop buffers are recreated only when pixel dimensions change. There is no crop worker queue, so no crop work can accumulate; the existing one-frame source queue supplies latest-frame semantics.
-
-Stop, source closure, invalid dimensions, and frame-pool recreation retain the editor and its unsaved state. A new window selection does not automatically load or clear a layout.
-
-## Coordinate systems
-
-There are three explicit coordinate systems:
-
-- source pixels, whose dimensions come from the captured frame;
-- normalized source coordinates, authoritative values from 0 through 1;
-- WPF preview coordinates, device-independent units local to the preview surface.
-
-For source size `(Sw, Sh)` and preview size `(Pw, Ph)`, the mapper calculates:
+## Live data flow and ownership
 
 ```text
-scale = min(Pw / Sw, Ph / Sh)
-viewportWidth  = Sw × scale
-viewportHeight = Sh × scale
-viewportX = (Pw - viewportWidth) / 2
-viewportY = (Ph - viewportHeight) / 2
+Windows.Graphics.Capture
+  -> D3D frame pool
+  -> CPU BGRA pooled payload
+  -> LatestFrameQueue (one pending source frame)
+  -> CaptureController synchronous notification
+     -> WPF preview/crop bitmap copies
+     -> tightly packed owned CLOCK copy
+        -> ClockRecognitionWorker (one replaceable pending crop)
+           -> constrained image recognizer
+           -> temporal validator
+           -> dispatcher presentation
 ```
 
-Normalized points and rectangles map through that centered viewport. Unused vertical space is letterboxing; unused horizontal space is pillarboxing. `PreviewToNormalized` returns no point outside the viewport, preventing bar clicks from creating invalid annotations. Overlay geometry is recalculated when either source or WPF preview dimensions change; normalized values are never rewritten by a resize.
+The controller disposes pooled source memory immediately after notification. Recognition sees only the owned small crop. The worker replaces and disposes stale pending crops, limits cadence to `min(maximumSamplesPerSecond, 4 × playbackSpeed)`, and never blocks preview rendering. Its semaphore represents an empty-to-occupied transition, not an enqueue count: replacement does not signal, and the consumer waits for cadence before atomically taking and clearing the one pending slot. Stop rejects new samples, cancels pending delays/recognition, disposes the pending sample, and drains any canceled run's signal before restart. Recognition-worker faults are reported through the recognition status and do not stop an otherwise healthy capture preview.
 
-## Region editor
+## Recognition responsibilities
 
-`RegionEditor` stores two nullable working values keyed by the closed `RegionType` enum: CLOCK and MINIMAP. It is not a generic annotation collection. Its transaction states are create, move, and resize. A transaction records the pre-edit region; commit returns a structured result, while cancel restores that snapshot.
+`IClockImageRecognizer` is history-free. The initial implementation:
 
-All operations use normalized coordinates. Movement clamps while preserving size. Eight edge/corner handles change only their associated edges. Edges clamp to `[0, 1]` and to a configurable minimum width/height (1% defaults), so a region cannot invert or collapse. A saved snapshot supports deterministic unsaved-change detection. Clearing removes only the requested semantic region.
+1. converts BGRA to luminance with integer weights;
+2. rejects insufficient contrast;
+3. applies profile-selected Otsu or fixed threshold and foreground polarity;
+4. localizes nonempty x-runs and tight y bounds;
+5. identifies a narrow sparse separator;
+6. area-normalizes digit segments to 5×7 masks;
+7. ranks digit templates by deterministic binary agreement;
+8. builds bounded candidate combinations;
+9. parses only `M:SS`, `MM:SS`, or `MMM:SS`, valid seconds, and profile maximum time;
+10. applies the profile confidence floor.
 
-The WPF view model performs hit-testing using mapper-produced overlay rectangles. Selecting **Edit CLOCK** or **Edit MINIMAP** makes creation intent explicit when that region is absent. Existing rectangles may be clicked, moved, or resized. Labels distinguish semantics independently of border color; only the selected region shows handles.
+Diagnostics retain normalized pixels, segment rectangles/pixels, preprocessing variant, candidates, per-character confidence, and precise failure reason.
 
-## Layout persistence and compatibility
+`IClockTemporalValidator` receives only image-supported candidates. It owns accepted history and source timing. Image evidence and temporal evidence remain separately visible in `ClockReading`. Rejected readings have `GameTime = null`; `BestCandidate.ParsedGameTime` is diagnostic rather than canonical, and `LastAcceptedGameTime` is explicitly historical.
 
-`JsonCaptureLayoutStore` defaults to `%LOCALAPPDATA%\LeagueScreenAnalyzer\CaptureLayouts` and accepts an override directory. Schema version 1 requires a name and complete, valid CLOCK and MINIMAP regions. Optional `sourceAspectRatio` records the source geometry under which the user saved.
+## Temporal state machine
 
-Save serializes to a unique temporary file in the destination directory, flushes it, then uses same-volume move/replace. Existing names require `overwrite: true`. Load rejects malformed JSON, unknown properties, missing region fields, unsupported schemas, file/name mismatches, and invalid normalized bounds. Delete is explicit and independent of capture-session disposal.
+For `ReplayContinuous`:
 
-`SourceAspectRatioCompatibility` defines a material change as a relative difference strictly greater than 2%. Matching-ratio resolution changes naturally preserve alignment. A material mismatch retains all coordinates and emits a visible warning plus structured log so the user can adjust manually.
+```text
+no anchor + supported candidate -> Valid anchor
+supported repeated second       -> Valid
+supported expected progression  -> Valid and update anchor
+image unavailable               -> unavailable; retain historical anchor
+candidate < anchor              -> Backward
+advance > elapsed × speed + tol -> Implausible
+source timestamp regression     -> Discontinuous
+long missing interval           -> Discontinuous
+```
 
-## Diagnostics and logging
+Whole-second display behavior is handled by accepting repeats and a profile forward tolerance. Speeds 0.25x through 8x scale expected progression. Profile/speed changes are prohibited while the live worker runs. No state transition synthesizes time.
 
-Normal-level structured logs cover capture lifecycle plus region create/move/resize/clear, layout save/load/delete, rejected malformed layouts, aspect mismatch, and diagnostic export. Pointer-move events and ordinary frames are not logged.
+The `BroadcastVod` enum value preserves a later policy seam for disappearance and forward gap anchoring. That policy is not complete and `ReplayContinuous` does not repair gaps.
 
-An explicit diagnostic bundle contains the source-resolution full frame, a source-resolution annotated frame, configured crops, and active layout JSON in one timestamped `artifacts` directory. Nothing is continuously saved.
+## Profiles and layout association
 
-## Testing seams
+`ClockRecognitionProfile` includes stable ID/name/version, expected pattern, character bounds, threshold/polarity, confidence floor, maximum time, temporal tolerances, fixed playback speed, cadence cap, and validation mode. `BuiltInClockProfiles` validates deterministic built-ins at construction.
 
-The mapper, editor, compatibility rule, JSON store, capture selector/session, and latest-frame queue are independently testable. Deterministic tests exercise aspect-preserving mapping and bar rejection, all edit directions and invariants, transaction rollback/commit, persistence error cases and atomic-file cleanup, lifecycle preservation and source-size changes, controller transitions, pooled-frame replacement, and the original fixture pipeline. Platform picker and D3D behavior remain a manual Windows test.
+`league-replay-v1` retains canonical synthetic seven-segment masks. Template-backed profiles resolve a validated manifest beneath `fixtures/clocks/<profile-id>`, inherit recognition settings from their declared base profile, support multiple provenance-tracked templates per glyph, and use nearest-template overlap scoring with one-pixel translation tolerance. Candidate confidence includes absolute glyph quality and first/second margin; the weakest glyph can make the whole clock unavailable. Calibration evaluation is independent-sample by construction and emits separate apparent-training and leave-one-sample-out reports without changing normal `ReplayContinuous` validation.
 
-## Manual validation
+Capture layout schema 1 may store nullable `clockProfileId`. This is an intentional reference only: visual classifier and policy data do not leak into general layout JSON. Older schema-1 files without the field remain valid.
 
-Run the WPF application and verify:
+The v1 classifier uses documented synthetic 5×7 masks. They validate mechanics, not League accuracy. Real profile calibration must retain small labeled source crops and provenance, revise classifier references, increment the profile version, and pass the evaluator with special attention to false accepts.
 
-1. select/stop/reselect and unexpected target closure;
-2. create both labeled regions, move them, and use every handle;
-3. boundary/minimum enforcement and Escape cancellation;
-4. overlay alignment during analyzer and target-window resizes;
-5. bar clicks ignored for mismatched preview/source ratios;
-6. both crops update without persisted frame streams;
-7. save, explicit overwrite, load, delete, and reload after restart;
-8. more-than-2% aspect mismatch warning without region mutation;
-9. stop/source closure preserves layout state;
-10. one-shot diagnostic bundle contents;
-11. application shutdown leaves no analyzer process.
+## Result semantics
+
+Statuses are:
+
+- `Valid`: canonical `GameTime` exists;
+- `NotConfigured`: recognition or CLOCK region is disabled/missing;
+- `NotVisible`: insufficient contrast/no foreground;
+- `Unreadable`: no supported image evidence;
+- `Malformed`: localized text cannot parse;
+- `LowConfidence`: image candidate below profile threshold;
+- `Implausible`: forward movement violates replay timing;
+- `Backward`: candidate moves behind the anchor;
+- `Discontinuous`: source regression or broken continuous-replay assumptions.
+
+Legacy fixture enum values remain for serialized/source compatibility, while fixture processing now emits refined states.
+
+## Diagnostics, evaluation, and logging
+
+Explicit clock bundles include original BMP, normalized PGM, each segmented PGM, and JSON with recognition, temporal, profile, playback, cadence, source identity, and label mode. A labeled save requires a user-supplied `M:SS` or `MM:SS` value parsed independently of recognition and temporal history. Core normalizes that value and exposes its total seconds/milliseconds; the diagnostic writer persists all three representations. An unlabeled bundle requires an explicit UI choice and is marked `unlabeledDiagnostic`. Writes occur only on command.
+
+The profile in a diagnostic `result.json` is immutable source provenance: it identifies the recognizer/profile version, preprocessing, original recognition result, and candidate present at capture time. The explicit user label is the only ground truth. The profile requested by `evaluate-clock` is a separate target selected at evaluation time, and the base profile requested by `build-clock-profile` is a third role that supplies inherited settings and the current preprocessing/segmentation workflow.
+
+The CLI reads either labeled, small P2 PGM manifests or recursively discovers diagnostic `result.json` files. For every usable labeled bundle it decodes the sibling `original-clock.bmp` and reruns the requested target profile, regardless of whether the crop was captured under v1, v2, or another supported source profile. Cross-profile evaluation does not overwrite source JSON. Reports distinguish `capturedWithProfile`, `evaluatedWithProfile`, original candidate/status, and newly evaluated candidate/status. Compatibility entries retain deterministic accept/reject decisions and reasons for unlabeled samples, malformed labels/provenance, unsupported schemas, missing or corrupt crops, and current-profile processing failures.
+
+Profile construction similarly ignores stored recognition candidates and stored segment pixels as training truth. It decodes the original crop, reruns the requested base profile's preprocessing and segmentation, aligns the result to the explicit `M:SS` or `MM:SS` label, and stops template extraction for ambiguous samples. Template provenance records the source diagnostic bundle and capture profile separately from the generated target profile. This makes mixed-version labeled datasets durable calibration assets: old samples are intentionally reusable and need not be recaptured for every profile revision.
+
+Discovery and processing are relative-path sorted and emit correct accepts/rejects, false accepts/rejects, per-character/exact accuracy, confidence distribution, confusions, compatibility decisions, and per-sample evidence. A wrong accepted label counts as both failed expected recognition and false acceptance. Reports preserve provenance so synthetic results cannot be mistaken for real measurements.
+
+Normal structured logs cover enable/disable, profile/speed selection, worker lifecycle, rejection category/reason, discontinuity/regression, profile failures, and diagnostic writes. Accepted high-frequency candidates are debug-level.
+
+## Testing and manual boundary
+
+Deterministic tests cover manual label formats/normalization/errors, labeled and explicitly unlabeled persistence, diagnostic-bundle evaluator discovery, recognition parsers, image dimensions/polarity/segmentation/templates/separator/confidence/ambiguity, no-character and low-contrast images, all temporal transitions and required speeds, non-fabrication/history semantics, latest-sample replacement, immutable running settings, diagnostics, profile/layout loading, evaluator metrics, and all earlier capture/editor fixtures.
+
+Platform capture, visual WPF state distinction, several-minute real replay recognition, real minute rollovers, real calibration artifacts, responsiveness under replay, and process cleanup require an interactive manual run without physical mouse/keyboard automation. Synthetic fixtures are never reported as real validation.
 
 ## Known limitations
 
-The CPU readback/presentation path favors simplicity over zero-copy throughput. Aspect similarity cannot guarantee identical broadcast graphics. Crop sampling is nearest source-pixel rectangle expansion via floor/ceiling and performs no validation. The layout UI uses filename-compatible names. No OCR, map validation, automatic discovery, database, recording, or replay control exists.
+The initial segmentation assumes separable x-runs and the initial masks are not League-derived. Real antialiasing, scale, shadows, compression, and background variation remain unmeasured. Broadcast-VOD gap anchoring, minimap validation, automatic region discovery, OCR fallback, replay control, and persistent live timelines are intentionally absent.
 
 ## Next milestone
 
-Read and validate the visible game clock from the configured Clock region, while treating missing or implausible readings as unavailable rather than guessing.
+Validate configured MINIMAP visibility, emit timestamped valid minimap observations, and create explicit unavailable intervals when the clock or minimap cannot be trusted.

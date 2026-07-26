@@ -87,6 +87,9 @@ public sealed class SessionProcessor(
             valid.LastOrDefault()?.GameTime,
             gaps.Count,
             observations.Count(observation =>
-                observation.ClockResult.Status == ClockReadingStatus.RejectedJump));
+                observation.ClockResult.Status is ClockReadingStatus.Implausible
+                    or ClockReadingStatus.Backward
+                    or ClockReadingStatus.Discontinuous
+                    or ClockReadingStatus.RejectedJump));
     }
 }

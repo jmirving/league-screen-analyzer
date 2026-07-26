@@ -8,6 +8,12 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.10" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Include="..\..\fixtures\clocks\league-replay-v2\**\*"
+             Link="fixtures\clocks\league-replay-v2\%(RecursiveDir)%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>

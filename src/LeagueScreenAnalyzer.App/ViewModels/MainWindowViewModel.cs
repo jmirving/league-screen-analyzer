@@ -12,6 +12,7 @@ using LeagueScreenAnalyzer.App.Services;
 using LeagueScreenAnalyzer.Capture.Live;
 using LeagueScreenAnalyzer.Core.Models;
 using LeagueScreenAnalyzer.Core.Regions;
+using LeagueScreenAnalyzer.Imaging;
 using LeagueScreenAnalyzer.Storage;
 using Microsoft.Extensions.Logging;
 
@@ -38,6 +39,23 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
     private string _layoutName = string.Empty;
     private string? _selectedSavedLayout;
     private bool _overwriteLayout;
+    private readonly ClockRecognitionWorker _clockWorker;
+    private readonly ClockDiagnosticWriter _clockDiagnosticWriter = new();
+    private ClockRecognitionObservation? _latestClockObservation;
+    private bool _recognitionEnabled = true;
+    private double _selectedPlaybackSpeed = 1;
+    private string _selectedClockProfileId = BuiltInClockProfiles.LeagueReplayV1Id;
+    private string _clockStatus = ClockReadingStatus.NotConfigured.ToString();
+    private string? _clockRecognizedText;
+    private string? _clockAcceptedTime;
+    private string? _clockHistoricalTime;
+    private string? _clockLastAcceptedSourceTime;
+    private string _clockConfidence = "0.00";
+    private string _recognitionCadence = "0.0 samples/sec";
+    private string? _clockDiagnostic;
+    private string _actualClockValue = string.Empty;
+    private string? _clockLabelValidationMessage;
+    private bool _saveUnlabeledClockSample;
     private RegionType? _activeEditType;
     private double _previewWidth;
     private double _previewHeight;
@@ -64,6 +82,12 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
         _aspectRatioCompatibility = aspectRatioCompatibility
             ?? new SourceAspectRatioCompatibility(MaterialAspectRatioThreshold);
         _captureState = captureController.State;
+        _clockWorker = new ClockRecognitionWorker(
+            new ConstrainedClockImageRecognizer(),
+            new ClockTemporalValidator(),
+            SelectedProfile());
+        _clockWorker.ObservationAvailable += OnClockObservationAvailable;
+        _clockWorker.RecognitionFailed += OnClockRecognitionFailed;
 
         ClockOverlay = new RegionOverlayViewModel(RegionType.Clock);
         MinimapOverlay = new RegionOverlayViewModel(RegionType.Minimap);
@@ -75,6 +99,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
             () => _captureController.StopAsync(), () => _captureState.IsCapturing, SetCommandError);
         SaveDiagnosticFrameCommand = new RelayCommand(
             SaveDiagnosticBundle, () => _previewImage is not null);
+        SaveClockSampleCommand = new RelayCommand(
+            SaveClockSample, () => _latestClockObservation is not null);
         EditClockCommand = new RelayCommand(
             () => ActivateEditor(RegionType.Clock), () => CanEditRegions);
         EditMinimapCommand = new RelayCommand(
@@ -96,7 +122,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
     }
 
     public string Title => "League Screen Analyzer";
-    public string MilestoneDescription => "Normalized Clock and Minimap capture regions";
+    public string MilestoneDescription => "Visible game-clock recognition and temporal validation";
     public string CaptureStatus => _captureState.Status.ToString();
     public string SelectedSourceName => _captureState.SourceName ?? "No window selected";
     public string FrameDimensions => _captureState.Width > 0 && _captureState.Height > 0
@@ -154,6 +180,95 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
     }
 
     public bool OverwriteLayout { get => _overwriteLayout; set => Set(ref _overwriteLayout, value); }
+    public IReadOnlyList<ClockRecognitionProfile> AvailableClockProfiles => BuiltInClockProfiles.All;
+    public IReadOnlyList<double> PlaybackSpeeds { get; } = [0.25, 0.5, 1, 2, 4, 8];
+    public bool CanConfigureClockRecognition => !_captureState.IsCapturing;
+    public bool RecognitionEnabled
+    {
+        get => _recognitionEnabled;
+        set
+        {
+            if (Set(ref _recognitionEnabled, value))
+            {
+                _logger.LogInformation("Clock recognition {State}.", value ? "enabled" : "disabled");
+                if (!value)
+                {
+                    _ = _clockWorker.StopAsync();
+                    SetClockUnavailable(ClockReadingStatus.NotConfigured, "Recognition is disabled.");
+                }
+            }
+        }
+    }
+
+    public string SelectedClockProfileId
+    {
+        get => _selectedClockProfileId;
+        set
+        {
+            if (!CanConfigureClockRecognition || !Set(ref _selectedClockProfileId, value))
+            {
+                return;
+            }
+
+            ApplyClockSettings();
+            _logger.LogInformation("Clock profile selected: {ProfileId}.", value);
+            OnPropertyChanged(nameof(SelectedClockProfileName));
+        }
+    }
+
+    public string SelectedClockProfileName => SelectedProfile().Name;
+
+    public double SelectedPlaybackSpeed
+    {
+        get => _selectedPlaybackSpeed;
+        set
+        {
+            if (!CanConfigureClockRecognition || !PlaybackSpeeds.Contains(value) ||
+                !Set(ref _selectedPlaybackSpeed, value))
+            {
+                return;
+            }
+
+            ApplyClockSettings();
+            _logger.LogInformation("Clock playback speed selected: {PlaybackSpeed}x.", value);
+            OnPropertyChanged(nameof(PlaybackSpeedDisplay));
+        }
+    }
+
+    public string PlaybackSpeedDisplay => $"{SelectedPlaybackSpeed:0.##}x";
+    public string ClockStatus => _clockStatus;
+    public string ClockRecognizedText => _clockRecognizedText ?? "Unavailable";
+    public string ClockAcceptedTime => _clockAcceptedTime ?? "Unavailable";
+    public string ClockHistoricalTime => _clockHistoricalTime ?? "None";
+    public string ClockLastAcceptedSourceTime => _clockLastAcceptedSourceTime ?? "None";
+    public string ClockConfidence => _clockConfidence;
+    public string RecognitionCadence => _recognitionCadence;
+    public string ClockDiagnostic => _clockDiagnostic ?? "No recognition observation.";
+    public string ActualClockValue
+    {
+        get => _actualClockValue;
+        set
+        {
+            if (Set(ref _actualClockValue, value))
+            {
+                ValidateClockLabel(showBlankMessage: false);
+            }
+        }
+    }
+
+    public string? ClockLabelValidationMessage => _clockLabelValidationMessage;
+
+    public bool SaveUnlabeledClockSample
+    {
+        get => _saveUnlabeledClockSample;
+        set
+        {
+            if (Set(ref _saveUnlabeledClockSample, value))
+            {
+                ValidateClockLabel(showBlankMessage: false);
+            }
+        }
+    }
     public ObservableCollection<string> AvailableSavedLayouts { get; } = [];
     public RegionOverlayViewModel ClockOverlay { get; }
     public RegionOverlayViewModel MinimapOverlay { get; }
@@ -162,6 +277,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
     public AsyncRelayCommand SelectWindowCommand { get; }
     public AsyncRelayCommand StopCaptureCommand { get; }
     public RelayCommand SaveDiagnosticFrameCommand { get; }
+    public RelayCommand SaveClockSampleCommand { get; }
     public RelayCommand EditClockCommand { get; }
     public RelayCommand EditMinimapCommand { get; }
     public RelayCommand ClearClockCommand { get; }
@@ -275,6 +391,9 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
         _disposed = true;
         _captureController.StateChanged -= OnCaptureStateChanged;
         _captureController.FrameArrived -= OnFrameArrived;
+        _clockWorker.ObservationAvailable -= OnClockObservationAvailable;
+        _clockWorker.RecognitionFailed -= OnClockRecognitionFailed;
+        await _clockWorker.DisposeAsync();
         await _captureController.DisposeAsync();
     }
 
@@ -312,7 +431,12 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
         }
 
         double? aspect = CurrentAspectRatio();
-        CaptureLayout layout = new(LayoutName.Trim(), clock, minimap, aspect);
+        CaptureLayout layout = new(
+            LayoutName.Trim(),
+            clock,
+            minimap,
+            aspect,
+            SelectedClockProfileId);
         await _layoutStore.SaveAsync(layout, OverwriteLayout);
         _regionEditor.MarkSaved();
         _layoutAspectRatio = aspect;
@@ -336,6 +460,11 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
             _regionEditor.Cancel();
             _regionEditor.Load(layout.ClockRegion, layout.MinimapRegion);
             _layoutAspectRatio = layout.SourceAspectRatio;
+            if (layout.ClockProfileId is string profileId &&
+                BuiltInClockProfiles.All.Any(profile => profile.Id == profileId))
+            {
+                SelectedClockProfileId = profileId;
+            }
             LayoutName = layout.Name;
             _activeEditType = null;
             _layoutValidationMessage = $"Loaded layout '{layout.Name}'.";
@@ -402,6 +531,11 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
             OnPropertyChanged(nameof(LatestFrame));
             OnPropertyChanged(nameof(ErrorMessage));
             OnPropertyChanged(nameof(CanEditRegions));
+            OnPropertyChanged(nameof(CanConfigureClockRecognition));
+            if (!args.State.IsCapturing)
+            {
+                _ = _clockWorker.StopAsync();
+            }
             RaiseCommandStates();
         });
     }
@@ -443,11 +577,13 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
             return;
         }
 
-        RunOnDispatcher(() => UpdatePreview(args.Frame.Width, args.Frame.Height, payload));
+        RunOnDispatcher(() => UpdatePreview(args.Frame, payload));
     }
 
-    private unsafe void UpdatePreview(int width, int height, Bgra32FramePayload payload)
+    private unsafe void UpdatePreview(SourceFrame frame, Bgra32FramePayload payload)
     {
+        int width = frame.Width;
+        int height = frame.Height;
         if (_previewImage is null
             || _previewImage.PixelWidth != width
             || _previewImage.PixelHeight != height)
@@ -464,7 +600,15 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
                 (nint)pixelPointer,
                 pixels.Length,
                 payload.Stride);
-            UpdateCrop(RegionType.Clock, ClockRegion, width, height, payload, pixelPointer);
+            UpdateCrop(
+                RegionType.Clock,
+                ClockRegion,
+                width,
+                height,
+                payload,
+                pixelPointer,
+                frame.SequenceNumber,
+                frame.SourceTimestamp);
             UpdateCrop(RegionType.Minimap, MinimapRegion, width, height, payload, pixelPointer);
         }
 
@@ -477,7 +621,9 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
         int sourceWidth,
         int sourceHeight,
         Bgra32FramePayload payload,
-        byte* pixelPointer)
+        byte* pixelPointer,
+        long sourceSequence = 0,
+        TimeSpan sourceTimestamp = default)
     {
         CropPreviewViewModel preview = type == RegionType.Clock ? ClockCrop : MinimapCrop;
         if (region is null)
@@ -485,6 +631,11 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
             preview.Image = null;
             preview.Dimensions = "Not configured";
             preview.Coordinates = "Not configured";
+            if (type == RegionType.Clock)
+            {
+                _ = _clockWorker.StopAsync();
+                SetClockUnavailable(ClockReadingStatus.NotConfigured, "CLOCK region is not configured.");
+            }
             return;
         }
 
@@ -503,6 +654,43 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
             CultureInfo.InvariantCulture,
             $"{pixelRect.Width} × {pixelRect.Height} px");
         preview.Coordinates = FormatRegion(region);
+
+        if (type == RegionType.Clock && RecognitionEnabled && _captureState.IsCapturing)
+        {
+            try
+            {
+                if (!_clockWorker.IsRunning)
+                {
+                    ApplyClockSettings();
+                    _clockWorker.Start();
+                    _logger.LogInformation(
+                        "Clock recognition started with profile {ProfileId} at {PlaybackSpeed}x.",
+                        SelectedClockProfileId,
+                        SelectedPlaybackSpeed);
+                }
+
+                int cropStride = pixelRect.Width * 4;
+                byte[] copy = new byte[cropStride * pixelRect.Height];
+                for (int y = 0; y < pixelRect.Height; y++)
+                {
+                    new ReadOnlySpan<byte>(
+                        pixelPointer + offset + (y * payload.Stride),
+                        cropStride).CopyTo(copy.AsSpan(y * cropStride, cropStride));
+                }
+
+                _clockWorker.TrySubmit(new ClockImage(
+                    pixelRect.Width,
+                    pixelRect.Height,
+                    cropStride,
+                    copy,
+                    sourceSequence,
+                    sourceTimestamp));
+            }
+            catch (Exception exception)
+            {
+                ReportClockRecognitionFailure(exception);
+            }
+        }
     }
 
     private void SaveDiagnosticBundle()
@@ -540,6 +728,188 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
         }
 
         OnPropertyChanged(nameof(DiagnosticMessage));
+    }
+
+    private void SaveClockSample()
+    {
+        if (_latestClockObservation is null)
+        {
+            return;
+        }
+
+        ClockSampleLabel? label = null;
+        if (_saveUnlabeledClockSample)
+        {
+            if (!string.IsNullOrWhiteSpace(_actualClockValue))
+            {
+                SetClockLabelValidation(
+                    "Clear Actual clock value before saving an unlabeled diagnostic sample.");
+                return;
+            }
+        }
+        else if (!ClockSampleLabelParser.TryParse(
+                     _actualClockValue,
+                     out label,
+                     out string? validationMessage))
+        {
+            SetClockLabelValidation(validationMessage);
+            _diagnosticMessage = $"Clock sample not saved: {validationMessage}";
+            OnPropertyChanged(nameof(DiagnosticMessage));
+            return;
+        }
+
+        try
+        {
+            string root = Path.Combine(Environment.CurrentDirectory, "artifacts", "clock-samples");
+            string directory = _clockDiagnosticWriter.Write(
+                root,
+                _latestClockObservation,
+                _clockWorker.Profile,
+                label,
+                _saveUnlabeledClockSample);
+            bool labeled = label is not null;
+            _diagnosticMessage = labeled
+                ? $"Saved labeled clock sample ({label!.Value}): {directory}"
+                : $"Saved unlabeled clock diagnostic sample: {directory}";
+            _logger.LogInformation(
+                "Clock {SampleKind} sample written to {Path} with status {Status}.",
+                labeled ? "labeled" : "unlabeled diagnostic",
+                directory,
+                _latestClockObservation.Reading.Status);
+            if (labeled)
+            {
+                _actualClockValue = string.Empty;
+                OnPropertyChanged(nameof(ActualClockValue));
+            }
+
+            _saveUnlabeledClockSample = false;
+            OnPropertyChanged(nameof(SaveUnlabeledClockSample));
+            SetClockLabelValidation(null);
+        }
+        catch (Exception exception)
+        {
+            _diagnosticMessage = $"Could not save clock sample: {exception.Message}";
+            _logger.LogError(exception, "Failed to save clock diagnostic sample.");
+        }
+
+        OnPropertyChanged(nameof(DiagnosticMessage));
+    }
+
+    private void ValidateClockLabel(bool showBlankMessage)
+    {
+        if (_saveUnlabeledClockSample)
+        {
+            SetClockLabelValidation(string.IsNullOrWhiteSpace(_actualClockValue)
+                ? "The next save will be an unlabeled diagnostic sample."
+                : "Clear Actual clock value before saving an unlabeled diagnostic sample.");
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(_actualClockValue) && !showBlankMessage)
+        {
+            SetClockLabelValidation(null);
+            return;
+        }
+
+        SetClockLabelValidation(
+            ClockSampleLabelParser.TryParse(_actualClockValue, out _, out string? message)
+                ? null
+                : message);
+    }
+
+    private void SetClockLabelValidation(string? message)
+    {
+        if (_clockLabelValidationMessage == message)
+        {
+            return;
+        }
+
+        _clockLabelValidationMessage = message;
+        OnPropertyChanged(nameof(ClockLabelValidationMessage));
+    }
+
+    private void OnClockObservationAvailable(object? sender, ClockRecognitionObservation observation)
+    {
+        RunOnDispatcher(() =>
+        {
+            _latestClockObservation = observation;
+            ClockReading reading = observation.Reading;
+            _clockStatus = reading.Status.ToString();
+            _clockRecognizedText = reading.RawRecognizedText;
+            _clockAcceptedTime = reading.Status == ClockReadingStatus.Valid
+                ? reading.GameTime?.ToString(@"hh\:mm\:ss", CultureInfo.InvariantCulture)
+                : null;
+            _clockHistoricalTime = reading.LastAcceptedGameTime?.ToString(
+                @"hh\:mm\:ss",
+                CultureInfo.InvariantCulture);
+            _clockLastAcceptedSourceTime = reading.LastAcceptedSourceTimestamp?.ToString(
+                @"hh\:mm\:ss\.fff",
+                CultureInfo.InvariantCulture);
+            _clockConfidence = reading.Confidence.ToString("0.00", CultureInfo.InvariantCulture);
+            _recognitionCadence = observation.ActualSamplesPerSecond.ToString(
+                "0.0 'samples/sec'",
+                CultureInfo.InvariantCulture);
+            _clockDiagnostic = reading.DiagnosticReason ?? "Candidate accepted.";
+            OnPropertyChanged(nameof(ClockStatus));
+            OnPropertyChanged(nameof(ClockRecognizedText));
+            OnPropertyChanged(nameof(ClockAcceptedTime));
+            OnPropertyChanged(nameof(ClockHistoricalTime));
+            OnPropertyChanged(nameof(ClockLastAcceptedSourceTime));
+            OnPropertyChanged(nameof(ClockConfidence));
+            OnPropertyChanged(nameof(RecognitionCadence));
+            OnPropertyChanged(nameof(ClockDiagnostic));
+            SaveClockSampleCommand.RaiseCanExecuteChanged();
+
+            if (reading.Status == ClockReadingStatus.Valid)
+            {
+                _logger.LogDebug(
+                    "Clock candidate accepted: {Text}, confidence {Confidence}.",
+                    reading.RawRecognizedText,
+                    reading.Confidence);
+            }
+            else
+            {
+                _logger.LogWarning(
+                    "Clock candidate rejected with {Status}: {Reason}",
+                    reading.Status,
+                    reading.DiagnosticReason);
+            }
+        });
+    }
+
+    private void OnClockRecognitionFailed(object? sender, ClockRecognitionFailedEventArgs args)
+    {
+        RunOnDispatcher(() => ReportClockRecognitionFailure(args.Exception));
+    }
+
+    private void ReportClockRecognitionFailure(Exception exception)
+    {
+        _logger.LogError(exception, "Clock recognition failed.");
+        SetClockUnavailable(
+            ClockReadingStatus.Unreadable,
+            $"Clock recognition failed: {exception.Message}");
+    }
+
+    private void ApplyClockSettings()
+    {
+        ClockRecognitionProfile profile =
+            BuiltInClockProfiles.Get(SelectedClockProfileId).WithPlaybackSpeed(SelectedPlaybackSpeed);
+        _clockWorker.SetProfile(profile);
+    }
+
+    private ClockRecognitionProfile SelectedProfile() =>
+        BuiltInClockProfiles.Get(_selectedClockProfileId).WithPlaybackSpeed(_selectedPlaybackSpeed);
+
+    private void SetClockUnavailable(ClockReadingStatus status, string reason)
+    {
+        _clockStatus = status.ToString();
+        _clockRecognizedText = null;
+        _clockAcceptedTime = null;
+        _clockDiagnostic = reason;
+        OnPropertyChanged(nameof(ClockStatus));
+        OnPropertyChanged(nameof(ClockRecognizedText));
+        OnPropertyChanged(nameof(ClockAcceptedTime));
+        OnPropertyChanged(nameof(ClockDiagnostic));
     }
 
     private void SaveAnnotatedFrame(string path)
@@ -597,6 +967,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
             schemaVersion = 1,
             name = string.IsNullOrWhiteSpace(LayoutName) ? "Unsaved diagnostic layout" : LayoutName,
             sourceAspectRatio = CurrentAspectRatio(),
+            clockProfileId = SelectedClockProfileId,
             clockRegion = ClockRegion,
             minimapRegion = MinimapRegion
         };

@@ -20,6 +20,27 @@ public interface IGameClockReader
     ValueTask<ClockReading> ReadAsync(RegionFrame clockFrame, CancellationToken cancellationToken = default);
 }
 
+public interface IClockImageRecognizer
+{
+    ValueTask<ClockRecognitionResult> RecognizeAsync(
+        ClockImage image,
+        ClockRecognitionProfile profile,
+        CancellationToken cancellationToken = default);
+}
+
+public interface IClockTemporalValidator
+{
+    ClockReading Validate(
+        ClockRecognitionResult recognition,
+        ClockRecognitionProfile profile,
+        long sourceFrameSequence,
+        TimeSpan sourceTimestamp);
+
+    ClockTemporalContext Context { get; }
+
+    void Reset();
+}
+
 public interface IMapFrameValidator
 {
     ValueTask<MapValidationResult> ValidateAsync(RegionFrame minimapFrame, CancellationToken cancellationToken = default);

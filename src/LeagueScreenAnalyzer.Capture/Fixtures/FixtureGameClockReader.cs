@@ -59,7 +59,7 @@ public sealed class FixtureGameClockReader : IGameClockReader
             return ValueTask.FromResult(new ClockReading(
                 null,
                 0,
-                ClockReadingStatus.Unparseable,
+                ClockReadingStatus.Malformed,
                 $"Clock text '{payload.ClockText ?? "<null>"}' is not in m:ss format."));
         }
 
@@ -70,7 +70,7 @@ public sealed class FixtureGameClockReader : IGameClockReader
                 return ValueTask.FromResult(new ClockReading(
                     null,
                     0,
-                    ClockReadingStatus.RejectedJump,
+                    ClockReadingStatus.Backward,
                     $"Clock moved backward from {Format(_lastGameTime.Value)} to {Format(gameTime)}."));
             }
 
@@ -83,7 +83,7 @@ public sealed class FixtureGameClockReader : IGameClockReader
                 return ValueTask.FromResult(new ClockReading(
                     null,
                     0,
-                    ClockReadingStatus.RejectedJump,
+                    ClockReadingStatus.Implausible,
                     $"Clock advanced implausibly from {Format(_lastGameTime.Value)} to {Format(gameTime)}."));
             }
         }
