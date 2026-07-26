@@ -91,20 +91,13 @@ public static class ClockTemplateProfileLoader
 
     public static bool TryFindProfileDirectory(string profileId, out string? directory)
     {
-        foreach (string start in new[] { Environment.CurrentDirectory, AppContext.BaseDirectory })
+        ClockProfileCatalog catalog = ClockProfileCatalog.CreateDefault();
+        if (catalog.TryGet(profileId, out ClockProfileCatalogEntry? entry) &&
+            entry is not null &&
+            entry.SourceManifestPath is not null)
         {
-            DirectoryInfo? current = new(Path.GetFullPath(start));
-            while (current is not null)
-            {
-                string candidate = Path.Combine(current.FullName, "fixtures", "clocks", profileId);
-                if (File.Exists(Path.Combine(candidate, "manifest.json")))
-                {
-                    directory = candidate;
-                    return true;
-                }
-
-                current = current.Parent;
-            }
+            directory = Path.GetDirectoryName(entry.SourceManifestPath);
+            return true;
         }
 
         directory = null;
@@ -130,7 +123,8 @@ public static class ClockTemplateProfileLoader
             string.IsNullOrWhiteSpace(manifest.BaseProfileId) ||
             manifest.TemplateWidth <= 0 || manifest.TemplateHeight <= 0 ||
             string.IsNullOrWhiteSpace(manifest.PreprocessingVariant) ||
-            manifest.Templates.Count == 0)
+            manifest.Templates is null || manifest.Templates.Count == 0 ||
+            manifest.UnsupportedDigits is null)
         {
             throw new InvalidDataException("Clock template manifest header is malformed.");
         }

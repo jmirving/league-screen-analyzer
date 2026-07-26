@@ -11,7 +11,7 @@ public static class BuiltInClockProfiles
     [
         new ClockRecognitionProfile(
             LeagueReplayV1Id,
-            "League Replay HUD",
+            "League Replay HUD — v1 synthetic",
             1,
             "M:SS|MM:SS",
             4,
@@ -29,7 +29,7 @@ public static class BuiltInClockProfiles
             ClockValidationMode.ReplayContinuous).Validate(),
         new ClockRecognitionProfile(
             LeagueReplayV2Id,
-            "League Replay HUD (real calibrated v2)",
+            "League Replay HUD — v2 real calibrated",
             2,
             "MM:SS",
             5,
@@ -48,28 +48,5 @@ public static class BuiltInClockProfiles
     ];
 
     public static ClockRecognitionProfile Get(string id) =>
-        All.SingleOrDefault(profile => string.Equals(profile.Id, id, StringComparison.Ordinal))
-        ?? LoadGeneratedProfile(id);
-
-    private static ClockRecognitionProfile LoadGeneratedProfile(string id)
-    {
-        string directory;
-        try
-        {
-            directory = ClockTemplateProfileLoader.FindProfileDirectory(id);
-        }
-        catch (DirectoryNotFoundException)
-        {
-            throw new KeyNotFoundException($"Unknown clock profile '{id}'.");
-        }
-
-        ClockTemplateManifest manifest = ClockTemplateProfileLoader.LoadManifest(directory);
-        ClockRecognitionProfile baseProfile = Get(manifest.BaseProfileId);
-        return (baseProfile with
-        {
-            Id = manifest.ProfileId,
-            Name = $"{baseProfile.Name} ({manifest.ProfileId})",
-            Version = manifest.ProfileVersion
-        }).Validate();
-    }
+        ClockProfileCatalog.CreateDefault().Get(id).Profile;
 }

@@ -29,6 +29,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
     private readonly RegionEditor _regionEditor;
     private readonly ICaptureLayoutStore _layoutStore;
     private readonly ISourceAspectRatioCompatibility _aspectRatioCompatibility;
+    private readonly ClockProfileCatalog _clockProfileCatalog;
     private CaptureState _captureState;
     private WriteableBitmap? _previewImage;
     private readonly CropBitmapCache _clockCropCache = new();
@@ -45,6 +46,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
     private bool _recognitionEnabled = true;
     private double _selectedPlaybackSpeed = 1;
     private string _selectedClockProfileId = BuiltInClockProfiles.LeagueReplayV1Id;
+    private string? _clockProfileWarning;
     private string _clockStatus = ClockReadingStatus.NotConfigured.ToString();
     private string? _clockRecognizedText;
     private string? _clockAcceptedTime;
@@ -70,7 +72,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
         ICaptureLayoutStore? layoutStore = null,
         IPreviewCoordinateMapper? coordinateMapper = null,
         RegionEditor? regionEditor = null,
-        ISourceAspectRatioCompatibility? aspectRatioCompatibility = null)
+        ISourceAspectRatioCompatibility? aspectRatioCompatibility = null,
+        ClockProfileCatalog? clockProfileCatalog = null)
     {
         _captureController = captureController ?? throw new ArgumentNullException(nameof(captureController));
         _windowHandleProvider = windowHandleProvider ?? throw new ArgumentNullException(nameof(windowHandleProvider));
@@ -81,6 +84,14 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
         _regionEditor = regionEditor ?? new RegionEditor();
         _aspectRatioCompatibility = aspectRatioCompatibility
             ?? new SourceAspectRatioCompatibility(MaterialAspectRatioThreshold);
+        _clockProfileCatalog = clockProfileCatalog ?? ClockProfileCatalog.CreateDefault();
+        foreach (ClockProfileCatalogError error in _clockProfileCatalog.Errors)
+        {
+            _logger.LogError(
+                "Clock profile discovery error at {ManifestPath}: {Message}",
+                error.ManifestPath,
+                error.Message);
+        }
         _captureState = captureController.State;
         _clockWorker = new ClockRecognitionWorker(
             new ConstrainedClockImageRecognizer(),
@@ -180,7 +191,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
     }
 
     public bool OverwriteLayout { get => _overwriteLayout; set => Set(ref _overwriteLayout, value); }
-    public IReadOnlyList<ClockRecognitionProfile> AvailableClockProfiles => BuiltInClockProfiles.All;
+    public IReadOnlyList<ClockProfileCatalogEntry> AvailableClockProfiles =>
+        _clockProfileCatalog.Profiles;
     public IReadOnlyList<double> PlaybackSpeeds { get; } = [0.25, 0.5, 1, 2, 4, 8];
     public bool CanConfigureClockRecognition => !_captureState.IsCapturing;
     public bool RecognitionEnabled
@@ -211,12 +223,19 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
             }
 
             ApplyClockSettings();
+            _clockProfileWarning = null;
             _logger.LogInformation("Clock profile selected: {ProfileId}.", value);
             OnPropertyChanged(nameof(SelectedClockProfileName));
+            OnPropertyChanged(nameof(SelectedClockProfileTemplateCount));
+            OnPropertyChanged(nameof(ClockProfileWarning));
+            OnPropertyChanged(nameof(ActiveClockProfileId));
         }
     }
 
-    public string SelectedClockProfileName => SelectedProfile().Name;
+    public string SelectedClockProfileName => SelectedCatalogEntry().DisplayName;
+    public int SelectedClockProfileTemplateCount => SelectedCatalogEntry().TemplateCount;
+    public string ActiveClockProfileId => _clockWorker.Profile.Id;
+    public string ClockProfileWarning => _clockProfileWarning ?? string.Empty;
 
     public double SelectedPlaybackSpeed
     {
@@ -460,10 +479,9 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
             _regionEditor.Cancel();
             _regionEditor.Load(layout.ClockRegion, layout.MinimapRegion);
             _layoutAspectRatio = layout.SourceAspectRatio;
-            if (layout.ClockProfileId is string profileId &&
-                BuiltInClockProfiles.All.Any(profile => profile.Id == profileId))
+            if (layout.ClockProfileId is string profileId)
             {
-                SelectedClockProfileId = profileId;
+                RestorePersistedClockProfile(profileId, layout.Name);
             }
             LayoutName = layout.Name;
             _activeEditType = null;
@@ -532,6 +550,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
             OnPropertyChanged(nameof(ErrorMessage));
             OnPropertyChanged(nameof(CanEditRegions));
             OnPropertyChanged(nameof(CanConfigureClockRecognition));
+            OnPropertyChanged(nameof(ActiveClockProfileId));
             if (!args.State.IsCapturing)
             {
                 _ = _clockWorker.StopAsync();
@@ -893,12 +912,35 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
     private void ApplyClockSettings()
     {
         ClockRecognitionProfile profile =
-            BuiltInClockProfiles.Get(SelectedClockProfileId).WithPlaybackSpeed(SelectedPlaybackSpeed);
+            _clockProfileCatalog.Get(SelectedClockProfileId).Profile
+                .WithPlaybackSpeed(SelectedPlaybackSpeed);
         _clockWorker.SetProfile(profile);
+        OnPropertyChanged(nameof(ActiveClockProfileId));
     }
 
     private ClockRecognitionProfile SelectedProfile() =>
-        BuiltInClockProfiles.Get(_selectedClockProfileId).WithPlaybackSpeed(_selectedPlaybackSpeed);
+        SelectedCatalogEntry().Profile.WithPlaybackSpeed(_selectedPlaybackSpeed);
+
+    private ClockProfileCatalogEntry SelectedCatalogEntry() =>
+        _clockProfileCatalog.Get(_selectedClockProfileId);
+
+    internal bool RestorePersistedClockProfile(string profileId, string sourceName)
+    {
+        if (_clockProfileCatalog.TryGet(profileId, out _))
+        {
+            SelectedClockProfileId = profileId;
+            return true;
+        }
+
+        _clockProfileWarning =
+            $"Saved clock profile '{profileId}' is unavailable. Select an installed profile; the current selection was not changed.";
+        _logger.LogWarning(
+            "Capture layout {LayoutName} references unavailable clock profile {ProfileId}.",
+            sourceName,
+            profileId);
+        OnPropertyChanged(nameof(ClockProfileWarning));
+        return false;
+    }
 
     private void SetClockUnavailable(ClockReadingStatus status, string reason)
     {

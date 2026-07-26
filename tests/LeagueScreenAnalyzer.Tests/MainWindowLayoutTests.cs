@@ -50,6 +50,21 @@ public sealed class MainWindowLayoutTests
                     RequiredElement<CheckBox>(window, "RecognitionEnabledToggle");
                 MainWindowViewModel viewModel =
                     Assert.IsType<MainWindowViewModel>(window.DataContext);
+                Assert.Equal(
+                    ["league-replay-v1", "league-replay-v2", "league-replay-v3"],
+                    viewModel.AvailableClockProfiles.Select(profile => profile.Id).ToArray());
+                viewModel.SelectedClockProfileId = "league-replay-v3";
+                Assert.Equal("league-replay-v3", viewModel.SelectedClockProfileId);
+                Assert.Equal("league-replay-v3", viewModel.ActiveClockProfileId);
+                Assert.Equal(135, viewModel.SelectedClockProfileTemplateCount);
+                Assert.Contains(
+                    "league-replay-v3",
+                    RequiredElement<TextBlock>(window, "SelectedClockProfileIdText").Text);
+                Assert.False(viewModel.RestorePersistedClockProfile(
+                    "missing-profile",
+                    "missing-layout"));
+                Assert.Equal("league-replay-v3", viewModel.SelectedClockProfileId);
+                Assert.Contains("missing-profile", viewModel.ClockProfileWarning);
                 enabledToggle.IsChecked = false;
                 Assert.False(viewModel.RecognitionEnabled);
                 enabledToggle.IsChecked = true;
@@ -84,6 +99,8 @@ public sealed class MainWindowLayoutTests
         Assert.NotNull(RequiredElement<TextBlock>(window, "ClockHistoricalGameTimeText").Text);
         Assert.NotNull(RequiredElement<TextBlock>(window, "ClockConfidenceText").Text);
         Assert.NotNull(RequiredElement<TextBlock>(window, "ClockDiagnosticText").Text);
+        Assert.NotNull(RequiredElement<TextBlock>(window, "SelectedClockProfileIdText").Text);
+        Assert.NotNull(RequiredElement<TextBlock>(window, "ClockProfileWarningText"));
         Assert.Equal(
             "Actual clock value",
             RequiredElement<TextBox>(window, "ActualClockValueTextBox")

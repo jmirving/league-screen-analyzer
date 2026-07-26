@@ -233,11 +233,26 @@
                             <TextBlock Margin="0,8,0,2" FontWeight="SemiBold" Text="Profile" />
                             <ComboBox x:Name="ClockProfileSelector"
                                       ItemsSource="{Binding AvailableClockProfiles}"
-                                      DisplayMemberPath="Name"
+                                      DisplayMemberPath="UiLabel"
                                       SelectedValuePath="Id"
                                       SelectedValue="{Binding SelectedClockProfileId}"
                                       IsEnabled="{Binding CanConfigureClockRecognition}"
                                       AutomationProperties.Name="Clock recognition profile" />
+                            <TextBlock x:Name="ClockProfileWarningText"
+                                       Foreground="#FFB45309" TextWrapping="Wrap"
+                                       Text="{Binding ClockProfileWarning}">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Margin" Value="0,3,0,0" />
+                                        <Style.Triggers>
+                                            <Trigger Property="Text" Value="">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                <Setter Property="Margin" Value="0" />
+                                            </Trigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
                             <TextBlock Margin="0,8,0,2" FontWeight="SemiBold"
                                        Text="Fixed playback speed" />
                             <ComboBox x:Name="PlaybackSpeedSelector"
@@ -245,11 +260,20 @@
                                       SelectedItem="{Binding SelectedPlaybackSpeed}"
                                       IsEnabled="{Binding CanConfigureClockRecognition}"
                                       AutomationProperties.Name="Playback speed" />
-                            <TextBlock Margin="0,4,0,8" Foreground="DimGray">
-                                <Run Text="Selected: " />
+                            <TextBlock x:Name="SelectedClockProfileIdText"
+                                       Margin="0,4,0,8" Foreground="DimGray"
+                                       FontFamily="Consolas">
+                                <Run Text="Speed: " />
                                 <Run Text="{Binding PlaybackSpeedDisplay, Mode=OneWay}"
                                      FontWeight="Bold" />
-                                <Run Text=" (locked during capture)" />
+                                <Run Text="  ID: " />
+                                <Run Text="{Binding SelectedClockProfileId, Mode=OneWay}"
+                                     FontWeight="Bold" />
+                                <Run Text="  Templates: " />
+                                <Run Text="{Binding SelectedClockProfileTemplateCount, Mode=OneWay}" />
+                                <Run Text="  Active: " />
+                                <Run Text="{Binding ActiveClockProfileId, Mode=OneWay}"
+                                     FontWeight="Bold" />
                             </TextBlock>
                             <Border Padding="8" Background="#FFF3F4F6" CornerRadius="3">
                                 <Grid>

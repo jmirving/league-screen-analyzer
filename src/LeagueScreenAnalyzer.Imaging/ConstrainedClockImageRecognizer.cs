@@ -70,6 +70,14 @@ public sealed class ConstrainedClockImageRecognizer : IClockImageRecognizer
                     StringComparison.Ordinal))
                 .ToArray();
         }
+        else if (!string.Equals(
+                     profile.Id,
+                     BuiltInClockProfiles.LeagueReplayV1Id,
+                     StringComparison.Ordinal))
+        {
+            throw new InvalidDataException(
+                $"Clock profile '{profile.Id}' requires installed template assets, but its validated manifest is unavailable.");
+        }
 
         List<List<ClockCharacterCandidate>> characterCandidates = [];
         for (int segmentIndex = 0; segmentIndex < segments.Count; segmentIndex++)

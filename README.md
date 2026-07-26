@@ -58,6 +58,16 @@ The initial classifier masks are deterministic 5x7 seven-segment mechanics templ
 
 `league-replay-v2` supplements v1 with 65 small real League-derived templates generated from 13 explicitly labeled diagnostic bundles. Its manifest records source bundle, full label, character position, glyph, and preprocessing version for every template. Digit 8 has no real evidence; digits 4, 6, and 7 have only one independent source bundle each. The profile is calibrated evidence, not a production-readiness claim.
 
+The CLI and WPF app use the same validated clock-profile catalog. Builds copy
+`fixtures/clocks/**` beside each executable, and runtime discovery checks that packaged
+directory first, then `%LOCALAPPDATA%\LeagueScreenAnalyzer\profiles`. Set
+`LEAGUE_SCREEN_ANALYZER_CLOCK_PROFILES` to an explicit directory of profile
+subdirectories for development. Only when no packaged profile manifests exist does the
+catalog walk upward for a repository `fixtures/clocks` development fallback; normal
+runtime discovery never depends on the process working directory. Malformed manifests,
+missing templates, dependency failures, and duplicate stable IDs are rejected and
+reported rather than replaced or silently downgraded.
+
 To add a real template/profile revision:
 
 1. Pause or inspect the replay at the desired frame and type its visible time into **Actual clock value**.

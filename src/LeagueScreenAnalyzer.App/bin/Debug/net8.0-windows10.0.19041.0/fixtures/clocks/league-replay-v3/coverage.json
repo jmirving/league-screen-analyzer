@@ -1,0 +1,45 @@
+{
+  "digitOccurrences": {
+    "0": 43,
+    "1": 14,
+    "2": 4,
+    "3": 4,
+    "4": 9,
+    "5": 4,
+    "6": 10,
+    "7": 5,
+    "8": 9,
+    "9": 6
+  },
+  "digitSourceBundles": {
+    "0": 27,
+    "1": 14,
+    "2": 3,
+    "3": 4,
+    "4": 6,
+    "5": 4,
+    "6": 7,
+    "7": 3,
+    "8": 6,
+    "9": 5
+  },
+  "separatorExamples": 27,
+  "singleDigitMinuteSamples": 23,
+  "doubleDigitMinuteSamples": 4,
+  "minuteBoundarySamples": 6,
+  "cropSizes": {
+    "52x15": 27
+  },
+  "sourceWindowResolutionAvailability": "Not recorded in schemaVersion 2 diagnostic bundles",
+  "sourceLuminanceRanges": {
+    "0-196": 27
+  },
+  "preprocessingVariants": {
+    "Otsu/LightOnDark": 27
+  },
+  "unsupportedDigits": [],
+  "weaklySupportedDigits": [],
+  "recommendedAdditionalLabels": [
+    "10:08"
+  ]
+}

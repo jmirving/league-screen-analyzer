@@ -1,0 +1,30 @@
+{
+  "profileId": "league-replay-v1",
+  "provenance": "Deterministically authored seven-segment mechanics fixtures. These are synthetic and are not evidence of League replay accuracy.",
+  "samples": [
+    {
+      "id": "single-minute-0-00",
+      "image": "0-00.pgm",
+      "label": "0:00",
+      "expectedAccepted": true
+    },
+    {
+      "id": "double-minute-12-43",
+      "image": "12-43.pgm",
+      "label": "12:43",
+      "expectedAccepted": true
+    },
+    {
+      "id": "missing-clock",
+      "image": "missing.pgm",
+      "label": null,
+      "expectedAccepted": false
+    },
+    {
+      "id": "low-contrast",
+      "image": "low-contrast.pgm",
+      "label": null,
+      "expectedAccepted": false
+    }
+  ]
+}

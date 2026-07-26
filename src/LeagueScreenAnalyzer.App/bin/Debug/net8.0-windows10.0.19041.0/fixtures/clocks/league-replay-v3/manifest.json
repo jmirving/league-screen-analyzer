@@ -1,0 +1,2037 @@
+{
+  "schemaVersion": 1,
+  "profileId": "league-replay-v3",
+  "profileVersion": 3,
+  "baseProfileId": "league-replay-v2",
+  "templateWidth": 12,
+  "templateHeight": 16,
+  "preprocessingVariant": "integer-bt709-luminance/otsu/light-on-dark/column-projection/12x16-majority",
+  "templates": [
+    {
+      "templateId": "0-clock-sample-20260726-115225-865-880-p00",
+      "glyph": "0",
+      "image": "templates/0/clock-sample-20260726-115225-865-880-p00.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-115225-865-880",
+        "explicitFullClockLabel": "0:06",
+        "characterPosition": 0,
+        "glyphLabel": "0",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "0-clock-sample-20260726-115225-865-880-p01",
+      "glyph": "0",
+      "image": "templates/0/clock-sample-20260726-115225-865-880-p01.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-115225-865-880",
+        "explicitFullClockLabel": "0:06",
+        "characterPosition": 1,
+        "glyphLabel": "0",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "0-clock-sample-20260726-115225-865-880-p03",
+      "glyph": "0",
+      "image": "templates/0/clock-sample-20260726-115225-865-880-p03.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-115225-865-880",
+        "explicitFullClockLabel": "0:06",
+        "characterPosition": 3,
+        "glyphLabel": "0",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "0-clock-sample-20260726-115240-522-1543-p00",
+      "glyph": "0",
+      "image": "templates/0/clock-sample-20260726-115240-522-1543-p00.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-115240-522-1543",
+        "explicitFullClockLabel": "0:09",
+        "characterPosition": 0,
+        "glyphLabel": "0",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "0-clock-sample-20260726-115240-522-1543-p01",
+      "glyph": "0",
+      "image": "templates/0/clock-sample-20260726-115240-522-1543-p01.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-115240-522-1543",
+        "explicitFullClockLabel": "0:09",
+        "characterPosition": 1,
+        "glyphLabel": "0",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "0-clock-sample-20260726-115240-522-1543-p03",
+      "glyph": "0",
+      "image": "templates/0/clock-sample-20260726-115240-522-1543-p03.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-115240-522-1543",
+        "explicitFullClockLabel": "0:09",
+        "characterPosition": 3,
+        "glyphLabel": "0",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "0-clock-sample-20260726-115250-230-1951-p00",
+      "glyph": "0",
+      "image": "templates/0/clock-sample-20260726-115250-230-1951-p00.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-115250-230-1951",
+        "explicitFullClockLabel": "0:10",
+        "characterPosition": 0,
+        "glyphLabel": "0",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "0-clock-sample-20260726-115250-230-1951-p01",
+      "glyph": "0",
+      "image": "templates/0/clock-sample-20260726-115250-230-1951-p01.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-115250-230-1951",
+        "explicitFullClockLabel": "0:10",
+        "characterPosition": 1,
+        "glyphLabel": "0",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "0-clock-sample-20260726-115250-230-1951-p04",
+      "glyph": "0",
+      "image": "templates/0/clock-sample-20260726-115250-230-1951-p04.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-115250-230-1951",
+        "explicitFullClockLabel": "0:10",
+        "characterPosition": 4,
+        "glyphLabel": "0",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "0-clock-sample-20260726-115319-352-3283-p00",
+      "glyph": "0",
+      "image": "templates/0/clock-sample-20260726-115319-352-3283-p00.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-115319-352-3283",
+        "explicitFullClockLabel": "0:23",
+        "characterPosition": 0,
+        "glyphLabel": "0",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "0-clock-sample-20260726-115319-352-3283-p01",
+      "glyph": "0",
+      "image": "templates/0/clock-sample-20260726-115319-352-3283-p01.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-115319-352-3283",
+        "explicitFullClockLabel": "0:23",
+        "characterPosition": 1,
+        "glyphLabel": "0",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "0-clock-sample-20260726-115338-355-4093-p00",
+      "glyph": "0",
+      "image": "templates/0/clock-sample-20260726-115338-355-4093-p00.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-115338-355-4093",
+        "explicitFullClockLabel": "0:59",
+        "characterPosition": 0,
+        "glyphLabel": "0",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "0-clock-sample-20260726-115338-355-4093-p01",
+      "glyph": "0",
+      "image": "templates/0/clock-sample-20260726-115338-355-4093-p01.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-115338-355-4093",
+        "explicitFullClockLabel": "0:59",
+        "characterPosition": 1,
+        "glyphLabel": "0",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "0-clock-sample-20260726-115416-177-5710-p00",
+      "glyph": "0",
+      "image": "templates/0/clock-sample-20260726-115416-177-5710-p00.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-115416-177-5710",
+        "explicitFullClockLabel": "1:34",
+        "characterPosition": 0,
+        "glyphLabel": "0",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "0-clock-sample-20260726-115432-506-6392-p00",
+      "glyph": "0",
+      "image": "templates/0/clock-sample-20260726-115432-506-6392-p00.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-115432-506-6392",
+        "explicitFullClockLabel": "1:59",
+        "characterPosition": 0,
+        "glyphLabel": "0",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "0-clock-sample-20260726-115501-014-7617-p00",
+      "glyph": "0",
+      "image": "templates/0/clock-sample-20260726-115501-014-7617-p00.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-115501-014-7617",
+        "explicitFullClockLabel": "2:27",
+        "characterPosition": 0,
+        "glyphLabel": "0",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "0-clock-sample-20260726-115520-221-8444-p00",
+      "glyph": "0",
+      "image": "templates/0/clock-sample-20260726-115520-221-8444-p00.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-115520-221-8444",
+        "explicitFullClockLabel": "2:59",
+        "characterPosition": 0,
+        "glyphLabel": "0",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "0-clock-sample-20260726-115530-321-8869-p00",
+      "glyph": "0",
+      "image": "templates/0/clock-sample-20260726-115530-321-8869-p00.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-115530-321-8869",
+        "explicitFullClockLabel": "3:00",
+        "characterPosition": 0,
+        "glyphLabel": "0",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "0-clock-sample-20260726-115530-321-8869-p03",
+      "glyph": "0",
+      "image": "templates/0/clock-sample-20260726-115530-321-8869-p03.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-115530-321-8869",
+        "explicitFullClockLabel": "3:00",
+        "characterPosition": 3,
+        "glyphLabel": "0",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "0-clock-sample-20260726-115530-321-8869-p04",
+      "glyph": "0",
+      "image": "templates/0/clock-sample-20260726-115530-321-8869-p04.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-115530-321-8869",
+        "explicitFullClockLabel": "3:00",
+        "characterPosition": 4,
+        "glyphLabel": "0",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "0-clock-sample-20260726-115538-110-9192-p00",
+      "glyph": "0",
+      "image": "templates/0/clock-sample-20260726-115538-110-9192-p00.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-115538-110-9192",
+        "explicitFullClockLabel": "3:01",
+        "characterPosition": 0,
+        "glyphLabel": "0",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "0-clock-sample-20260726-115538-110-9192-p03",
+      "glyph": "0",
+      "image": "templates/0/clock-sample-20260726-115538-110-9192-p03.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-115538-110-9192",
+        "explicitFullClockLabel": "3:01",
+        "characterPosition": 3,
+        "glyphLabel": "0",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "0-clock-sample-20260726-115551-868-9756-p00",
+      "glyph": "0",
+      "image": "templates/0/clock-sample-20260726-115551-868-9756-p00.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-115551-868-9756",
+        "explicitFullClockLabel": "9:59",
+        "characterPosition": 0,
+        "glyphLabel": "0",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "0-clock-sample-20260726-115601-296-10164-p01",
+      "glyph": "0",
+      "image": "templates/0/clock-sample-20260726-115601-296-10164-p01.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-115601-296-10164",
+        "explicitFullClockLabel": "10:00",
+        "characterPosition": 1,
+        "glyphLabel": "0",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "0-clock-sample-20260726-115601-296-10164-p03",
+      "glyph": "0",
+      "image": "templates/0/clock-sample-20260726-115601-296-10164-p03.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-115601-296-10164",
+        "explicitFullClockLabel": "10:00",
+        "characterPosition": 3,
+        "glyphLabel": "0",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "0-clock-sample-20260726-115601-296-10164-p04",
+      "glyph": "0",
+      "image": "templates/0/clock-sample-20260726-115601-296-10164-p04.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-115601-296-10164",
+        "explicitFullClockLabel": "10:00",
+        "characterPosition": 4,
+        "glyphLabel": "0",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "0-clock-sample-20260726-123056-465-984-p00",
+      "glyph": "0",
+      "image": "templates/0/clock-sample-20260726-123056-465-984-p00.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-123056-465-984",
+        "explicitFullClockLabel": "8:18",
+        "characterPosition": 0,
+        "glyphLabel": "0",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "0-clock-sample-20260726-123210-968-4654-p00",
+      "glyph": "0",
+      "image": "templates/0/clock-sample-20260726-123210-968-4654-p00.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-123210-968-4654",
+        "explicitFullClockLabel": "8:18",
+        "characterPosition": 0,
+        "glyphLabel": "0",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "0-clock-sample-20260726-123223-859-5269-p00",
+      "glyph": "0",
+      "image": "templates/0/clock-sample-20260726-123223-859-5269-p00.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-123223-859-5269",
+        "explicitFullClockLabel": "8:18",
+        "characterPosition": 0,
+        "glyphLabel": "0",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "0-clock-sample-20260726-123254-331-6736-p00",
+      "glyph": "0",
+      "image": "templates/0/clock-sample-20260726-123254-331-6736-p00.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-123254-331-6736",
+        "explicitFullClockLabel": "4:46",
+        "characterPosition": 0,
+        "glyphLabel": "0",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "0-clock-sample-20260726-123317-072-7831-p00",
+      "glyph": "0",
+      "image": "templates/0/clock-sample-20260726-123317-072-7831-p00.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-123317-072-7831",
+        "explicitFullClockLabel": "4:46",
+        "characterPosition": 0,
+        "glyphLabel": "0",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "0-clock-sample-20260726-123328-889-8396-p00",
+      "glyph": "0",
+      "image": "templates/0/clock-sample-20260726-123328-889-8396-p00.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-123328-889-8396",
+        "explicitFullClockLabel": "4:46",
+        "characterPosition": 0,
+        "glyphLabel": "0",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "0-clock-sample-20260726-123344-031-9107-p00",
+      "glyph": "0",
+      "image": "templates/0/clock-sample-20260726-123344-031-9107-p00.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-123344-031-9107",
+        "explicitFullClockLabel": "6:16",
+        "characterPosition": 0,
+        "glyphLabel": "0",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "0-clock-sample-20260726-123347-998-9301-p00",
+      "glyph": "0",
+      "image": "templates/0/clock-sample-20260726-123347-998-9301-p00.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-123347-998-9301",
+        "explicitFullClockLabel": "6:16",
+        "characterPosition": 0,
+        "glyphLabel": "0",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "0-clock-sample-20260726-123357-612-9741-p00",
+      "glyph": "0",
+      "image": "templates/0/clock-sample-20260726-123357-612-9741-p00.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-123357-612-9741",
+        "explicitFullClockLabel": "6:16",
+        "characterPosition": 0,
+        "glyphLabel": "0",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "0-clock-sample-20260726-123420-265-10811-p00",
+      "glyph": "0",
+      "image": "templates/0/clock-sample-20260726-123420-265-10811-p00.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-123420-265-10811",
+        "explicitFullClockLabel": "7:47",
+        "characterPosition": 0,
+        "glyphLabel": "0",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "0-clock-sample-20260726-123427-622-11152-p00",
+      "glyph": "0",
+      "image": "templates/0/clock-sample-20260726-123427-622-11152-p00.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-123427-622-11152",
+        "explicitFullClockLabel": "7:47",
+        "characterPosition": 0,
+        "glyphLabel": "0",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "0-clock-sample-20260726-123450-126-12221-p01",
+      "glyph": "0",
+      "image": "templates/0/clock-sample-20260726-123450-126-12221-p01.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-123450-126-12221",
+        "explicitFullClockLabel": "10:08",
+        "characterPosition": 1,
+        "glyphLabel": "0",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "0-clock-sample-20260726-123450-126-12221-p03",
+      "glyph": "0",
+      "image": "templates/0/clock-sample-20260726-123450-126-12221-p03.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-123450-126-12221",
+        "explicitFullClockLabel": "10:08",
+        "characterPosition": 3,
+        "glyphLabel": "0",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "0-clock-sample-20260726-123457-307-12575-p01",
+      "glyph": "0",
+      "image": "templates/0/clock-sample-20260726-123457-307-12575-p01.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-123457-307-12575",
+        "explicitFullClockLabel": "10:08",
+        "characterPosition": 1,
+        "glyphLabel": "0",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "0-clock-sample-20260726-123457-307-12575-p03",
+      "glyph": "0",
+      "image": "templates/0/clock-sample-20260726-123457-307-12575-p03.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-123457-307-12575",
+        "explicitFullClockLabel": "10:08",
+        "characterPosition": 3,
+        "glyphLabel": "0",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "0-clock-sample-20260726-123503-612-12877-p01",
+      "glyph": "0",
+      "image": "templates/0/clock-sample-20260726-123503-612-12877-p01.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-123503-612-12877",
+        "explicitFullClockLabel": "10:08",
+        "characterPosition": 1,
+        "glyphLabel": "0",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "0-clock-sample-20260726-123503-612-12877-p03",
+      "glyph": "0",
+      "image": "templates/0/clock-sample-20260726-123503-612-12877-p03.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-123503-612-12877",
+        "explicitFullClockLabel": "10:08",
+        "characterPosition": 3,
+        "glyphLabel": "0",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "1-clock-sample-20260726-115250-230-1951-p03",
+      "glyph": "1",
+      "image": "templates/1/clock-sample-20260726-115250-230-1951-p03.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-115250-230-1951",
+        "explicitFullClockLabel": "0:10",
+        "characterPosition": 3,
+        "glyphLabel": "1",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "1-clock-sample-20260726-115416-177-5710-p01",
+      "glyph": "1",
+      "image": "templates/1/clock-sample-20260726-115416-177-5710-p01.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-115416-177-5710",
+        "explicitFullClockLabel": "1:34",
+        "characterPosition": 1,
+        "glyphLabel": "1",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "1-clock-sample-20260726-115432-506-6392-p01",
+      "glyph": "1",
+      "image": "templates/1/clock-sample-20260726-115432-506-6392-p01.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-115432-506-6392",
+        "explicitFullClockLabel": "1:59",
+        "characterPosition": 1,
+        "glyphLabel": "1",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "1-clock-sample-20260726-115538-110-9192-p04",
+      "glyph": "1",
+      "image": "templates/1/clock-sample-20260726-115538-110-9192-p04.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-115538-110-9192",
+        "explicitFullClockLabel": "3:01",
+        "characterPosition": 4,
+        "glyphLabel": "1",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "1-clock-sample-20260726-115601-296-10164-p00",
+      "glyph": "1",
+      "image": "templates/1/clock-sample-20260726-115601-296-10164-p00.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-115601-296-10164",
+        "explicitFullClockLabel": "10:00",
+        "characterPosition": 0,
+        "glyphLabel": "1",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "1-clock-sample-20260726-123056-465-984-p03",
+      "glyph": "1",
+      "image": "templates/1/clock-sample-20260726-123056-465-984-p03.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-123056-465-984",
+        "explicitFullClockLabel": "8:18",
+        "characterPosition": 3,
+        "glyphLabel": "1",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "1-clock-sample-20260726-123210-968-4654-p03",
+      "glyph": "1",
+      "image": "templates/1/clock-sample-20260726-123210-968-4654-p03.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-123210-968-4654",
+        "explicitFullClockLabel": "8:18",
+        "characterPosition": 3,
+        "glyphLabel": "1",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "1-clock-sample-20260726-123223-859-5269-p03",
+      "glyph": "1",
+      "image": "templates/1/clock-sample-20260726-123223-859-5269-p03.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-123223-859-5269",
+        "explicitFullClockLabel": "8:18",
+        "characterPosition": 3,
+        "glyphLabel": "1",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "1-clock-sample-20260726-123344-031-9107-p03",
+      "glyph": "1",
+      "image": "templates/1/clock-sample-20260726-123344-031-9107-p03.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-123344-031-9107",
+        "explicitFullClockLabel": "6:16",
+        "characterPosition": 3,
+        "glyphLabel": "1",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "1-clock-sample-20260726-123347-998-9301-p03",
+      "glyph": "1",
+      "image": "templates/1/clock-sample-20260726-123347-998-9301-p03.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-123347-998-9301",
+        "explicitFullClockLabel": "6:16",
+        "characterPosition": 3,
+        "glyphLabel": "1",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "1-clock-sample-20260726-123357-612-9741-p03",
+      "glyph": "1",
+      "image": "templates/1/clock-sample-20260726-123357-612-9741-p03.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-123357-612-9741",
+        "explicitFullClockLabel": "6:16",
+        "characterPosition": 3,
+        "glyphLabel": "1",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "1-clock-sample-20260726-123450-126-12221-p00",
+      "glyph": "1",
+      "image": "templates/1/clock-sample-20260726-123450-126-12221-p00.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-123450-126-12221",
+        "explicitFullClockLabel": "10:08",
+        "characterPosition": 0,
+        "glyphLabel": "1",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "1-clock-sample-20260726-123457-307-12575-p00",
+      "glyph": "1",
+      "image": "templates/1/clock-sample-20260726-123457-307-12575-p00.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-123457-307-12575",
+        "explicitFullClockLabel": "10:08",
+        "characterPosition": 0,
+        "glyphLabel": "1",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "1-clock-sample-20260726-123503-612-12877-p00",
+      "glyph": "1",
+      "image": "templates/1/clock-sample-20260726-123503-612-12877-p00.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-123503-612-12877",
+        "explicitFullClockLabel": "10:08",
+        "characterPosition": 0,
+        "glyphLabel": "1",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "2-clock-sample-20260726-115319-352-3283-p03",
+      "glyph": "2",
+      "image": "templates/2/clock-sample-20260726-115319-352-3283-p03.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-115319-352-3283",
+        "explicitFullClockLabel": "0:23",
+        "characterPosition": 3,
+        "glyphLabel": "2",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "2-clock-sample-20260726-115501-014-7617-p01",
+      "glyph": "2",
+      "image": "templates/2/clock-sample-20260726-115501-014-7617-p01.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-115501-014-7617",
+        "explicitFullClockLabel": "2:27",
+        "characterPosition": 1,
+        "glyphLabel": "2",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "2-clock-sample-20260726-115501-014-7617-p03",
+      "glyph": "2",
+      "image": "templates/2/clock-sample-20260726-115501-014-7617-p03.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-115501-014-7617",
+        "explicitFullClockLabel": "2:27",
+        "characterPosition": 3,
+        "glyphLabel": "2",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "2-clock-sample-20260726-115520-221-8444-p01",
+      "glyph": "2",
+      "image": "templates/2/clock-sample-20260726-115520-221-8444-p01.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-115520-221-8444",
+        "explicitFullClockLabel": "2:59",
+        "characterPosition": 1,
+        "glyphLabel": "2",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "3-clock-sample-20260726-115319-352-3283-p04",
+      "glyph": "3",
+      "image": "templates/3/clock-sample-20260726-115319-352-3283-p04.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-115319-352-3283",
+        "explicitFullClockLabel": "0:23",
+        "characterPosition": 4,
+        "glyphLabel": "3",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "3-clock-sample-20260726-115416-177-5710-p03",
+      "glyph": "3",
+      "image": "templates/3/clock-sample-20260726-115416-177-5710-p03.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-115416-177-5710",
+        "explicitFullClockLabel": "1:34",
+        "characterPosition": 3,
+        "glyphLabel": "3",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "3-clock-sample-20260726-115530-321-8869-p01",
+      "glyph": "3",
+      "image": "templates/3/clock-sample-20260726-115530-321-8869-p01.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-115530-321-8869",
+        "explicitFullClockLabel": "3:00",
+        "characterPosition": 1,
+        "glyphLabel": "3",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "3-clock-sample-20260726-115538-110-9192-p01",
+      "glyph": "3",
+      "image": "templates/3/clock-sample-20260726-115538-110-9192-p01.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-115538-110-9192",
+        "explicitFullClockLabel": "3:01",
+        "characterPosition": 1,
+        "glyphLabel": "3",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "4-clock-sample-20260726-115416-177-5710-p04",
+      "glyph": "4",
+      "image": "templates/4/clock-sample-20260726-115416-177-5710-p04.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-115416-177-5710",
+        "explicitFullClockLabel": "1:34",
+        "characterPosition": 4,
+        "glyphLabel": "4",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "4-clock-sample-20260726-123254-331-6736-p01",
+      "glyph": "4",
+      "image": "templates/4/clock-sample-20260726-123254-331-6736-p01.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-123254-331-6736",
+        "explicitFullClockLabel": "4:46",
+        "characterPosition": 1,
+        "glyphLabel": "4",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "4-clock-sample-20260726-123254-331-6736-p03",
+      "glyph": "4",
+      "image": "templates/4/clock-sample-20260726-123254-331-6736-p03.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-123254-331-6736",
+        "explicitFullClockLabel": "4:46",
+        "characterPosition": 3,
+        "glyphLabel": "4",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "4-clock-sample-20260726-123317-072-7831-p01",
+      "glyph": "4",
+      "image": "templates/4/clock-sample-20260726-123317-072-7831-p01.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-123317-072-7831",
+        "explicitFullClockLabel": "4:46",
+        "characterPosition": 1,
+        "glyphLabel": "4",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "4-clock-sample-20260726-123317-072-7831-p03",
+      "glyph": "4",
+      "image": "templates/4/clock-sample-20260726-123317-072-7831-p03.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-123317-072-7831",
+        "explicitFullClockLabel": "4:46",
+        "characterPosition": 3,
+        "glyphLabel": "4",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "4-clock-sample-20260726-123328-889-8396-p01",
+      "glyph": "4",
+      "image": "templates/4/clock-sample-20260726-123328-889-8396-p01.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-123328-889-8396",
+        "explicitFullClockLabel": "4:46",
+        "characterPosition": 1,
+        "glyphLabel": "4",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "4-clock-sample-20260726-123328-889-8396-p03",
+      "glyph": "4",
+      "image": "templates/4/clock-sample-20260726-123328-889-8396-p03.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-123328-889-8396",
+        "explicitFullClockLabel": "4:46",
+        "characterPosition": 3,
+        "glyphLabel": "4",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "4-clock-sample-20260726-123420-265-10811-p03",
+      "glyph": "4",
+      "image": "templates/4/clock-sample-20260726-123420-265-10811-p03.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-123420-265-10811",
+        "explicitFullClockLabel": "7:47",
+        "characterPosition": 3,
+        "glyphLabel": "4",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "4-clock-sample-20260726-123427-622-11152-p03",
+      "glyph": "4",
+      "image": "templates/4/clock-sample-20260726-123427-622-11152-p03.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-123427-622-11152",
+        "explicitFullClockLabel": "7:47",
+        "characterPosition": 3,
+        "glyphLabel": "4",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "5-clock-sample-20260726-115338-355-4093-p03",
+      "glyph": "5",
+      "image": "templates/5/clock-sample-20260726-115338-355-4093-p03.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-115338-355-4093",
+        "explicitFullClockLabel": "0:59",
+        "characterPosition": 3,
+        "glyphLabel": "5",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "5-clock-sample-20260726-115432-506-6392-p03",
+      "glyph": "5",
+      "image": "templates/5/clock-sample-20260726-115432-506-6392-p03.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-115432-506-6392",
+        "explicitFullClockLabel": "1:59",
+        "characterPosition": 3,
+        "glyphLabel": "5",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "5-clock-sample-20260726-115520-221-8444-p03",
+      "glyph": "5",
+      "image": "templates/5/clock-sample-20260726-115520-221-8444-p03.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-115520-221-8444",
+        "explicitFullClockLabel": "2:59",
+        "characterPosition": 3,
+        "glyphLabel": "5",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "5-clock-sample-20260726-115551-868-9756-p03",
+      "glyph": "5",
+      "image": "templates/5/clock-sample-20260726-115551-868-9756-p03.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-115551-868-9756",
+        "explicitFullClockLabel": "9:59",
+        "characterPosition": 3,
+        "glyphLabel": "5",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "6-clock-sample-20260726-115225-865-880-p04",
+      "glyph": "6",
+      "image": "templates/6/clock-sample-20260726-115225-865-880-p04.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-115225-865-880",
+        "explicitFullClockLabel": "0:06",
+        "characterPosition": 4,
+        "glyphLabel": "6",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "6-clock-sample-20260726-123254-331-6736-p04",
+      "glyph": "6",
+      "image": "templates/6/clock-sample-20260726-123254-331-6736-p04.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-123254-331-6736",
+        "explicitFullClockLabel": "4:46",
+        "characterPosition": 4,
+        "glyphLabel": "6",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "6-clock-sample-20260726-123317-072-7831-p04",
+      "glyph": "6",
+      "image": "templates/6/clock-sample-20260726-123317-072-7831-p04.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-123317-072-7831",
+        "explicitFullClockLabel": "4:46",
+        "characterPosition": 4,
+        "glyphLabel": "6",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "6-clock-sample-20260726-123328-889-8396-p04",
+      "glyph": "6",
+      "image": "templates/6/clock-sample-20260726-123328-889-8396-p04.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-123328-889-8396",
+        "explicitFullClockLabel": "4:46",
+        "characterPosition": 4,
+        "glyphLabel": "6",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "6-clock-sample-20260726-123344-031-9107-p01",
+      "glyph": "6",
+      "image": "templates/6/clock-sample-20260726-123344-031-9107-p01.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-123344-031-9107",
+        "explicitFullClockLabel": "6:16",
+        "characterPosition": 1,
+        "glyphLabel": "6",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "6-clock-sample-20260726-123344-031-9107-p04",
+      "glyph": "6",
+      "image": "templates/6/clock-sample-20260726-123344-031-9107-p04.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-123344-031-9107",
+        "explicitFullClockLabel": "6:16",
+        "characterPosition": 4,
+        "glyphLabel": "6",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "6-clock-sample-20260726-123347-998-9301-p01",
+      "glyph": "6",
+      "image": "templates/6/clock-sample-20260726-123347-998-9301-p01.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-123347-998-9301",
+        "explicitFullClockLabel": "6:16",
+        "characterPosition": 1,
+        "glyphLabel": "6",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "6-clock-sample-20260726-123347-998-9301-p04",
+      "glyph": "6",
+      "image": "templates/6/clock-sample-20260726-123347-998-9301-p04.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-123347-998-9301",
+        "explicitFullClockLabel": "6:16",
+        "characterPosition": 4,
+        "glyphLabel": "6",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "6-clock-sample-20260726-123357-612-9741-p01",
+      "glyph": "6",
+      "image": "templates/6/clock-sample-20260726-123357-612-9741-p01.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-123357-612-9741",
+        "explicitFullClockLabel": "6:16",
+        "characterPosition": 1,
+        "glyphLabel": "6",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "6-clock-sample-20260726-123357-612-9741-p04",
+      "glyph": "6",
+      "image": "templates/6/clock-sample-20260726-123357-612-9741-p04.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-123357-612-9741",
+        "explicitFullClockLabel": "6:16",
+        "characterPosition": 4,
+        "glyphLabel": "6",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "7-clock-sample-20260726-115501-014-7617-p04",
+      "glyph": "7",
+      "image": "templates/7/clock-sample-20260726-115501-014-7617-p04.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-115501-014-7617",
+        "explicitFullClockLabel": "2:27",
+        "characterPosition": 4,
+        "glyphLabel": "7",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "7-clock-sample-20260726-123420-265-10811-p01",
+      "glyph": "7",
+      "image": "templates/7/clock-sample-20260726-123420-265-10811-p01.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-123420-265-10811",
+        "explicitFullClockLabel": "7:47",
+        "characterPosition": 1,
+        "glyphLabel": "7",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "7-clock-sample-20260726-123420-265-10811-p04",
+      "glyph": "7",
+      "image": "templates/7/clock-sample-20260726-123420-265-10811-p04.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-123420-265-10811",
+        "explicitFullClockLabel": "7:47",
+        "characterPosition": 4,
+        "glyphLabel": "7",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "7-clock-sample-20260726-123427-622-11152-p01",
+      "glyph": "7",
+      "image": "templates/7/clock-sample-20260726-123427-622-11152-p01.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-123427-622-11152",
+        "explicitFullClockLabel": "7:47",
+        "characterPosition": 1,
+        "glyphLabel": "7",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "7-clock-sample-20260726-123427-622-11152-p04",
+      "glyph": "7",
+      "image": "templates/7/clock-sample-20260726-123427-622-11152-p04.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-123427-622-11152",
+        "explicitFullClockLabel": "7:47",
+        "characterPosition": 4,
+        "glyphLabel": "7",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "8-clock-sample-20260726-123056-465-984-p01",
+      "glyph": "8",
+      "image": "templates/8/clock-sample-20260726-123056-465-984-p01.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-123056-465-984",
+        "explicitFullClockLabel": "8:18",
+        "characterPosition": 1,
+        "glyphLabel": "8",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "8-clock-sample-20260726-123056-465-984-p04",
+      "glyph": "8",
+      "image": "templates/8/clock-sample-20260726-123056-465-984-p04.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-123056-465-984",
+        "explicitFullClockLabel": "8:18",
+        "characterPosition": 4,
+        "glyphLabel": "8",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "8-clock-sample-20260726-123210-968-4654-p01",
+      "glyph": "8",
+      "image": "templates/8/clock-sample-20260726-123210-968-4654-p01.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-123210-968-4654",
+        "explicitFullClockLabel": "8:18",
+        "characterPosition": 1,
+        "glyphLabel": "8",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "8-clock-sample-20260726-123210-968-4654-p04",
+      "glyph": "8",
+      "image": "templates/8/clock-sample-20260726-123210-968-4654-p04.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-123210-968-4654",
+        "explicitFullClockLabel": "8:18",
+        "characterPosition": 4,
+        "glyphLabel": "8",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "8-clock-sample-20260726-123223-859-5269-p01",
+      "glyph": "8",
+      "image": "templates/8/clock-sample-20260726-123223-859-5269-p01.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-123223-859-5269",
+        "explicitFullClockLabel": "8:18",
+        "characterPosition": 1,
+        "glyphLabel": "8",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "8-clock-sample-20260726-123223-859-5269-p04",
+      "glyph": "8",
+      "image": "templates/8/clock-sample-20260726-123223-859-5269-p04.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-123223-859-5269",
+        "explicitFullClockLabel": "8:18",
+        "characterPosition": 4,
+        "glyphLabel": "8",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "8-clock-sample-20260726-123450-126-12221-p04",
+      "glyph": "8",
+      "image": "templates/8/clock-sample-20260726-123450-126-12221-p04.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-123450-126-12221",
+        "explicitFullClockLabel": "10:08",
+        "characterPosition": 4,
+        "glyphLabel": "8",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "8-clock-sample-20260726-123457-307-12575-p04",
+      "glyph": "8",
+      "image": "templates/8/clock-sample-20260726-123457-307-12575-p04.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-123457-307-12575",
+        "explicitFullClockLabel": "10:08",
+        "characterPosition": 4,
+        "glyphLabel": "8",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "8-clock-sample-20260726-123503-612-12877-p04",
+      "glyph": "8",
+      "image": "templates/8/clock-sample-20260726-123503-612-12877-p04.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-123503-612-12877",
+        "explicitFullClockLabel": "10:08",
+        "characterPosition": 4,
+        "glyphLabel": "8",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "9-clock-sample-20260726-115240-522-1543-p04",
+      "glyph": "9",
+      "image": "templates/9/clock-sample-20260726-115240-522-1543-p04.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-115240-522-1543",
+        "explicitFullClockLabel": "0:09",
+        "characterPosition": 4,
+        "glyphLabel": "9",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "9-clock-sample-20260726-115338-355-4093-p04",
+      "glyph": "9",
+      "image": "templates/9/clock-sample-20260726-115338-355-4093-p04.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-115338-355-4093",
+        "explicitFullClockLabel": "0:59",
+        "characterPosition": 4,
+        "glyphLabel": "9",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "9-clock-sample-20260726-115432-506-6392-p04",
+      "glyph": "9",
+      "image": "templates/9/clock-sample-20260726-115432-506-6392-p04.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-115432-506-6392",
+        "explicitFullClockLabel": "1:59",
+        "characterPosition": 4,
+        "glyphLabel": "9",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "9-clock-sample-20260726-115520-221-8444-p04",
+      "glyph": "9",
+      "image": "templates/9/clock-sample-20260726-115520-221-8444-p04.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-115520-221-8444",
+        "explicitFullClockLabel": "2:59",
+        "characterPosition": 4,
+        "glyphLabel": "9",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "9-clock-sample-20260726-115551-868-9756-p01",
+      "glyph": "9",
+      "image": "templates/9/clock-sample-20260726-115551-868-9756-p01.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-115551-868-9756",
+        "explicitFullClockLabel": "9:59",
+        "characterPosition": 1,
+        "glyphLabel": "9",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "9-clock-sample-20260726-115551-868-9756-p04",
+      "glyph": "9",
+      "image": "templates/9/clock-sample-20260726-115551-868-9756-p04.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-115551-868-9756",
+        "explicitFullClockLabel": "9:59",
+        "characterPosition": 4,
+        "glyphLabel": "9",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "separator-clock-sample-20260726-115225-865-880-p02",
+      "glyph": ":",
+      "image": "templates/separator/clock-sample-20260726-115225-865-880-p02.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-115225-865-880",
+        "explicitFullClockLabel": "0:06",
+        "characterPosition": 2,
+        "glyphLabel": ":",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "separator-clock-sample-20260726-115240-522-1543-p02",
+      "glyph": ":",
+      "image": "templates/separator/clock-sample-20260726-115240-522-1543-p02.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-115240-522-1543",
+        "explicitFullClockLabel": "0:09",
+        "characterPosition": 2,
+        "glyphLabel": ":",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "separator-clock-sample-20260726-115250-230-1951-p02",
+      "glyph": ":",
+      "image": "templates/separator/clock-sample-20260726-115250-230-1951-p02.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-115250-230-1951",
+        "explicitFullClockLabel": "0:10",
+        "characterPosition": 2,
+        "glyphLabel": ":",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "separator-clock-sample-20260726-115319-352-3283-p02",
+      "glyph": ":",
+      "image": "templates/separator/clock-sample-20260726-115319-352-3283-p02.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-115319-352-3283",
+        "explicitFullClockLabel": "0:23",
+        "characterPosition": 2,
+        "glyphLabel": ":",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "separator-clock-sample-20260726-115338-355-4093-p02",
+      "glyph": ":",
+      "image": "templates/separator/clock-sample-20260726-115338-355-4093-p02.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-115338-355-4093",
+        "explicitFullClockLabel": "0:59",
+        "characterPosition": 2,
+        "glyphLabel": ":",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "separator-clock-sample-20260726-115416-177-5710-p02",
+      "glyph": ":",
+      "image": "templates/separator/clock-sample-20260726-115416-177-5710-p02.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-115416-177-5710",
+        "explicitFullClockLabel": "1:34",
+        "characterPosition": 2,
+        "glyphLabel": ":",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "separator-clock-sample-20260726-115432-506-6392-p02",
+      "glyph": ":",
+      "image": "templates/separator/clock-sample-20260726-115432-506-6392-p02.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-115432-506-6392",
+        "explicitFullClockLabel": "1:59",
+        "characterPosition": 2,
+        "glyphLabel": ":",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "separator-clock-sample-20260726-115501-014-7617-p02",
+      "glyph": ":",
+      "image": "templates/separator/clock-sample-20260726-115501-014-7617-p02.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-115501-014-7617",
+        "explicitFullClockLabel": "2:27",
+        "characterPosition": 2,
+        "glyphLabel": ":",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "separator-clock-sample-20260726-115520-221-8444-p02",
+      "glyph": ":",
+      "image": "templates/separator/clock-sample-20260726-115520-221-8444-p02.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-115520-221-8444",
+        "explicitFullClockLabel": "2:59",
+        "characterPosition": 2,
+        "glyphLabel": ":",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "separator-clock-sample-20260726-115530-321-8869-p02",
+      "glyph": ":",
+      "image": "templates/separator/clock-sample-20260726-115530-321-8869-p02.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-115530-321-8869",
+        "explicitFullClockLabel": "3:00",
+        "characterPosition": 2,
+        "glyphLabel": ":",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "separator-clock-sample-20260726-115538-110-9192-p02",
+      "glyph": ":",
+      "image": "templates/separator/clock-sample-20260726-115538-110-9192-p02.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-115538-110-9192",
+        "explicitFullClockLabel": "3:01",
+        "characterPosition": 2,
+        "glyphLabel": ":",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "separator-clock-sample-20260726-115551-868-9756-p02",
+      "glyph": ":",
+      "image": "templates/separator/clock-sample-20260726-115551-868-9756-p02.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-115551-868-9756",
+        "explicitFullClockLabel": "9:59",
+        "characterPosition": 2,
+        "glyphLabel": ":",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "separator-clock-sample-20260726-115601-296-10164-p02",
+      "glyph": ":",
+      "image": "templates/separator/clock-sample-20260726-115601-296-10164-p02.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-115601-296-10164",
+        "explicitFullClockLabel": "10:00",
+        "characterPosition": 2,
+        "glyphLabel": ":",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "separator-clock-sample-20260726-123056-465-984-p02",
+      "glyph": ":",
+      "image": "templates/separator/clock-sample-20260726-123056-465-984-p02.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-123056-465-984",
+        "explicitFullClockLabel": "8:18",
+        "characterPosition": 2,
+        "glyphLabel": ":",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "separator-clock-sample-20260726-123210-968-4654-p02",
+      "glyph": ":",
+      "image": "templates/separator/clock-sample-20260726-123210-968-4654-p02.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-123210-968-4654",
+        "explicitFullClockLabel": "8:18",
+        "characterPosition": 2,
+        "glyphLabel": ":",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "separator-clock-sample-20260726-123223-859-5269-p02",
+      "glyph": ":",
+      "image": "templates/separator/clock-sample-20260726-123223-859-5269-p02.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-123223-859-5269",
+        "explicitFullClockLabel": "8:18",
+        "characterPosition": 2,
+        "glyphLabel": ":",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "separator-clock-sample-20260726-123254-331-6736-p02",
+      "glyph": ":",
+      "image": "templates/separator/clock-sample-20260726-123254-331-6736-p02.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-123254-331-6736",
+        "explicitFullClockLabel": "4:46",
+        "characterPosition": 2,
+        "glyphLabel": ":",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "separator-clock-sample-20260726-123317-072-7831-p02",
+      "glyph": ":",
+      "image": "templates/separator/clock-sample-20260726-123317-072-7831-p02.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-123317-072-7831",
+        "explicitFullClockLabel": "4:46",
+        "characterPosition": 2,
+        "glyphLabel": ":",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "separator-clock-sample-20260726-123328-889-8396-p02",
+      "glyph": ":",
+      "image": "templates/separator/clock-sample-20260726-123328-889-8396-p02.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-123328-889-8396",
+        "explicitFullClockLabel": "4:46",
+        "characterPosition": 2,
+        "glyphLabel": ":",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "separator-clock-sample-20260726-123344-031-9107-p02",
+      "glyph": ":",
+      "image": "templates/separator/clock-sample-20260726-123344-031-9107-p02.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-123344-031-9107",
+        "explicitFullClockLabel": "6:16",
+        "characterPosition": 2,
+        "glyphLabel": ":",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "separator-clock-sample-20260726-123347-998-9301-p02",
+      "glyph": ":",
+      "image": "templates/separator/clock-sample-20260726-123347-998-9301-p02.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-123347-998-9301",
+        "explicitFullClockLabel": "6:16",
+        "characterPosition": 2,
+        "glyphLabel": ":",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "separator-clock-sample-20260726-123357-612-9741-p02",
+      "glyph": ":",
+      "image": "templates/separator/clock-sample-20260726-123357-612-9741-p02.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-123357-612-9741",
+        "explicitFullClockLabel": "6:16",
+        "characterPosition": 2,
+        "glyphLabel": ":",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "separator-clock-sample-20260726-123420-265-10811-p02",
+      "glyph": ":",
+      "image": "templates/separator/clock-sample-20260726-123420-265-10811-p02.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-123420-265-10811",
+        "explicitFullClockLabel": "7:47",
+        "characterPosition": 2,
+        "glyphLabel": ":",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "separator-clock-sample-20260726-123427-622-11152-p02",
+      "glyph": ":",
+      "image": "templates/separator/clock-sample-20260726-123427-622-11152-p02.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-123427-622-11152",
+        "explicitFullClockLabel": "7:47",
+        "characterPosition": 2,
+        "glyphLabel": ":",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "separator-clock-sample-20260726-123450-126-12221-p02",
+      "glyph": ":",
+      "image": "templates/separator/clock-sample-20260726-123450-126-12221-p02.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-123450-126-12221",
+        "explicitFullClockLabel": "10:08",
+        "characterPosition": 2,
+        "glyphLabel": ":",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "separator-clock-sample-20260726-123457-307-12575-p02",
+      "glyph": ":",
+      "image": "templates/separator/clock-sample-20260726-123457-307-12575-p02.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-123457-307-12575",
+        "explicitFullClockLabel": "10:08",
+        "characterPosition": 2,
+        "glyphLabel": ":",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    },
+    {
+      "templateId": "separator-clock-sample-20260726-123503-612-12877-p02",
+      "glyph": ":",
+      "image": "templates/separator/clock-sample-20260726-123503-612-12877-p02.pgm",
+      "provenance": {
+        "sourceDiagnosticBundle": "clock-sample-20260726-123503-612-12877",
+        "explicitFullClockLabel": "10:08",
+        "characterPosition": 2,
+        "glyphLabel": ":",
+        "preprocessingProfileVersion": "league-replay-v3/Otsu/LightOnDark",
+        "capturedWithProfileId": "league-replay-v1",
+        "capturedWithProfileVersion": 1,
+        "builtIntoProfile": "league-replay-v3"
+      }
+    }
+  ],
+  "unsupportedDigits": []
+}

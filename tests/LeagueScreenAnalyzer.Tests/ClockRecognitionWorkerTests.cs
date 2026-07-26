@@ -216,6 +216,25 @@ public sealed class ClockRecognitionWorkerTests
     }
 
     [Fact]
+    public void Worker_SnapshotsSelectedProfileForRecognitionSession()
+    {
+        ClockRecognitionProfile selected =
+            ClockProfileCatalog.CreateDefault().Get("league-replay-v3").Profile;
+        ClockRecognitionWorker worker = new(
+            new ConstrainedClockImageRecognizer(),
+            new ClockTemporalValidator(),
+            selected);
+
+        worker.Start();
+
+        Assert.Equal("league-replay-v3", worker.Profile.Id);
+        Assert.Throws<InvalidOperationException>(() =>
+            worker.SetProfile(BuiltInClockProfiles.Get("league-replay-v1")));
+        Assert.Equal("league-replay-v3", worker.Profile.Id);
+        worker.DisposeAsync().AsTask().GetAwaiter().GetResult();
+    }
+
+    [Fact]
     public async Task DiagnosticWriter_WritesOriginalNormalizedSegmentsAndJson()
     {
         ClockImage image = ClockTestImages.Render("0:00");

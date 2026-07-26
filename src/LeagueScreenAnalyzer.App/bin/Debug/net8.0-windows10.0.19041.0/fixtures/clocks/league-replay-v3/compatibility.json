@@ -1,0 +1,191 @@
+[
+  {
+    "sample": "clock-sample-20260726-115225-865-880",
+    "accepted": true,
+    "rejectionReason": null,
+    "capturedWithProfile": "league-replay-v1 v1",
+    "builtIntoProfile": "league-replay-v3"
+  },
+  {
+    "sample": "clock-sample-20260726-115240-522-1543",
+    "accepted": true,
+    "rejectionReason": null,
+    "capturedWithProfile": "league-replay-v1 v1",
+    "builtIntoProfile": "league-replay-v3"
+  },
+  {
+    "sample": "clock-sample-20260726-115250-230-1951",
+    "accepted": true,
+    "rejectionReason": null,
+    "capturedWithProfile": "league-replay-v1 v1",
+    "builtIntoProfile": "league-replay-v3"
+  },
+  {
+    "sample": "clock-sample-20260726-115319-352-3283",
+    "accepted": true,
+    "rejectionReason": null,
+    "capturedWithProfile": "league-replay-v1 v1",
+    "builtIntoProfile": "league-replay-v3"
+  },
+  {
+    "sample": "clock-sample-20260726-115338-355-4093",
+    "accepted": true,
+    "rejectionReason": null,
+    "capturedWithProfile": "league-replay-v1 v1",
+    "builtIntoProfile": "league-replay-v3"
+  },
+  {
+    "sample": "clock-sample-20260726-115416-177-5710",
+    "accepted": true,
+    "rejectionReason": null,
+    "capturedWithProfile": "league-replay-v1 v1",
+    "builtIntoProfile": "league-replay-v3"
+  },
+  {
+    "sample": "clock-sample-20260726-115432-506-6392",
+    "accepted": true,
+    "rejectionReason": null,
+    "capturedWithProfile": "league-replay-v1 v1",
+    "builtIntoProfile": "league-replay-v3"
+  },
+  {
+    "sample": "clock-sample-20260726-115501-014-7617",
+    "accepted": true,
+    "rejectionReason": null,
+    "capturedWithProfile": "league-replay-v1 v1",
+    "builtIntoProfile": "league-replay-v3"
+  },
+  {
+    "sample": "clock-sample-20260726-115520-221-8444",
+    "accepted": true,
+    "rejectionReason": null,
+    "capturedWithProfile": "league-replay-v1 v1",
+    "builtIntoProfile": "league-replay-v3"
+  },
+  {
+    "sample": "clock-sample-20260726-115530-321-8869",
+    "accepted": true,
+    "rejectionReason": null,
+    "capturedWithProfile": "league-replay-v1 v1",
+    "builtIntoProfile": "league-replay-v3"
+  },
+  {
+    "sample": "clock-sample-20260726-115538-110-9192",
+    "accepted": true,
+    "rejectionReason": null,
+    "capturedWithProfile": "league-replay-v1 v1",
+    "builtIntoProfile": "league-replay-v3"
+  },
+  {
+    "sample": "clock-sample-20260726-115551-868-9756",
+    "accepted": true,
+    "rejectionReason": null,
+    "capturedWithProfile": "league-replay-v1 v1",
+    "builtIntoProfile": "league-replay-v3"
+  },
+  {
+    "sample": "clock-sample-20260726-115601-296-10164",
+    "accepted": true,
+    "rejectionReason": null,
+    "capturedWithProfile": "league-replay-v1 v1",
+    "builtIntoProfile": "league-replay-v3"
+  },
+  {
+    "sample": "clock-sample-20260726-123056-465-984",
+    "accepted": true,
+    "rejectionReason": null,
+    "capturedWithProfile": "league-replay-v1 v1",
+    "builtIntoProfile": "league-replay-v3"
+  },
+  {
+    "sample": "clock-sample-20260726-123210-968-4654",
+    "accepted": true,
+    "rejectionReason": null,
+    "capturedWithProfile": "league-replay-v1 v1",
+    "builtIntoProfile": "league-replay-v3"
+  },
+  {
+    "sample": "clock-sample-20260726-123223-859-5269",
+    "accepted": true,
+    "rejectionReason": null,
+    "capturedWithProfile": "league-replay-v1 v1",
+    "builtIntoProfile": "league-replay-v3"
+  },
+  {
+    "sample": "clock-sample-20260726-123254-331-6736",
+    "accepted": true,
+    "rejectionReason": null,
+    "capturedWithProfile": "league-replay-v1 v1",
+    "builtIntoProfile": "league-replay-v3"
+  },
+  {
+    "sample": "clock-sample-20260726-123317-072-7831",
+    "accepted": true,
+    "rejectionReason": null,
+    "capturedWithProfile": "league-replay-v1 v1",
+    "builtIntoProfile": "league-replay-v3"
+  },
+  {
+    "sample": "clock-sample-20260726-123328-889-8396",
+    "accepted": true,
+    "rejectionReason": null,
+    "capturedWithProfile": "league-replay-v1 v1",
+    "builtIntoProfile": "league-replay-v3"
+  },
+  {
+    "sample": "clock-sample-20260726-123344-031-9107",
+    "accepted": true,
+    "rejectionReason": null,
+    "capturedWithProfile": "league-replay-v1 v1",
+    "builtIntoProfile": "league-replay-v3"
+  },
+  {
+    "sample": "clock-sample-20260726-123347-998-9301",
+    "accepted": true,
+    "rejectionReason": null,
+    "capturedWithProfile": "league-replay-v1 v1",
+    "builtIntoProfile": "league-replay-v3"
+  },
+  {
+    "sample": "clock-sample-20260726-123357-612-9741",
+    "accepted": true,
+    "rejectionReason": null,
+    "capturedWithProfile": "league-replay-v1 v1",
+    "builtIntoProfile": "league-replay-v3"
+  },
+  {
+    "sample": "clock-sample-20260726-123420-265-10811",
+    "accepted": true,
+    "rejectionReason": null,
+    "capturedWithProfile": "league-replay-v1 v1",
+    "builtIntoProfile": "league-replay-v3"
+  },
+  {
+    "sample": "clock-sample-20260726-123427-622-11152",
+    "accepted": true,
+    "rejectionReason": null,
+    "capturedWithProfile": "league-replay-v1 v1",
+    "builtIntoProfile": "league-replay-v3"
+  },
+  {
+    "sample": "clock-sample-20260726-123450-126-12221",
+    "accepted": true,
+    "rejectionReason": null,
+    "capturedWithProfile": "league-replay-v1 v1",
+    "builtIntoProfile": "league-replay-v3"
+  },
+  {
+    "sample": "clock-sample-20260726-123457-307-12575",
+    "accepted": true,
+    "rejectionReason": null,
+    "capturedWithProfile": "league-replay-v1 v1",
+    "builtIntoProfile": "league-replay-v3"
+  },
+  {
+    "sample": "clock-sample-20260726-123503-612-12877",
+    "accepted": true,
+    "rejectionReason": null,
+    "capturedWithProfile": "league-replay-v1 v1",
+    "builtIntoProfile": "league-replay-v3"
+  }
+]

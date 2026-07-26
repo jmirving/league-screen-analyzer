@@ -4,6 +4,7 @@ using LeagueScreenAnalyzer.App.Services;
 using LeagueScreenAnalyzer.App.ViewModels;
 using LeagueScreenAnalyzer.Capture.Live;
 using LeagueScreenAnalyzer.Capture.Windows;
+using LeagueScreenAnalyzer.Imaging;
 using Microsoft.Extensions.Logging;
 
 namespace LeagueScreenAnalyzer.App;
@@ -21,11 +22,13 @@ public partial class MainWindow : Window
         CaptureController controller = new(
             selector,
             _loggerFactory.CreateLogger<CaptureController>());
+        ClockProfileCatalog clockProfileCatalog = ClockProfileCatalog.CreateDefault();
         _viewModel = new MainWindowViewModel(
             controller,
             new WindowHandleProvider(this),
             Dispatcher,
-            _loggerFactory.CreateLogger<MainWindowViewModel>());
+            _loggerFactory.CreateLogger<MainWindowViewModel>(),
+            clockProfileCatalog: clockProfileCatalog);
         DataContext = _viewModel;
     }
 
