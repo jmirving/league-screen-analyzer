@@ -31,8 +31,12 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
     private readonly RegionEditor _regionEditor;
     private readonly ICaptureLayoutStore _layoutStore;
     private readonly ISourceAspectRatioCompatibility _aspectRatioCompatibility;
-    private readonly ClockProfileCatalog _clockProfileCatalog;
-    private readonly MinimapProfileCatalog _minimapProfileCatalog;
+    private ClockProfileCatalog _clockProfileCatalog;
+    private MinimapProfileCatalog _minimapProfileCatalog;
+    private ClockProfileCatalog? _pendingClockProfileCatalog;
+    private MinimapProfileCatalog? _pendingMinimapProfileCatalog;
+    private bool _clockSelectionIsExplicit;
+    private bool _minimapSelectionIsExplicit;
     private CaptureState _captureState;
     private WriteableBitmap? _previewImage;
     private readonly CropBitmapCache _clockCropCache = new();
@@ -42,7 +46,9 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
     private string? _layoutValidationMessage;
     private string _layoutName = string.Empty;
     private string? _selectedSavedLayout;
-    private bool _overwriteLayout;
+    private string? _selectedLayoutId;
+    private string? _selectedLayoutPersistedName;
+    private string? _pendingOverwriteName;
     private readonly ClockRecognitionWorker _clockWorker;
     private readonly ClockDiagnosticWriter _clockDiagnosticWriter = new();
     private readonly MinimapValidationWorker _minimapWorker;
@@ -58,8 +64,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
     private string _minimapFeatures = "No minimap features.";
     private string _minimapReason = "Validation has not run.";
     private bool _minimapValidationEnabled = true;
-    private string _selectedMinimapProfileId =
-        BuiltInMinimapProfiles.LeagueReplayMinimapV1Id;
+    private string _selectedMinimapProfileId = string.Empty;
     private string? _minimapProfileWarning;
     private MinimapSampleLabel _selectedMinimapLabel = MinimapSampleLabel.Valid;
     private bool _saveUnlabeledMinimapSample;
@@ -78,7 +83,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
     private ClockRecognitionObservation? _latestClockObservation;
     private bool _recognitionEnabled = true;
     private double _selectedPlaybackSpeed = 1;
-    private string _selectedClockProfileId = BuiltInClockProfiles.LeagueReplayV1Id;
+    private string _selectedClockProfileId = string.Empty;
     private string? _clockProfileWarning;
     private string _clockStatus = ClockReadingStatus.NotConfigured.ToString();
     private string? _clockRecognizedText;
@@ -92,6 +97,19 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
     private string? _clockLabelValidationMessage;
     private bool _saveUnlabeledClockSample;
     private RegionType? _activeEditType;
+    private RegionEditSession? _precisionSession;
+    private BitmapSource? _precisionFrozenImage;
+    private Int32Rect _precisionContext;
+    private string _pixelX = string.Empty;
+    private string _pixelY = string.Empty;
+    private string _pixelWidth = string.Empty;
+    private string _pixelHeight = string.Empty;
+    private string _pixelSize = string.Empty;
+    private string? _pixelValidationMessage;
+    private bool _updatingPixelFields;
+    private PixelRegion? _precisionPointerOriginal;
+    private Point _precisionPointerStart;
+    private bool _precisionPointerResize;
     private double _previewWidth;
     private double _previewHeight;
     private double? _layoutAspectRatio;
@@ -121,6 +139,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
         _clockProfileCatalog = clockProfileCatalog ?? ClockProfileCatalog.CreateDefault();
         _minimapProfileCatalog =
             minimapProfileCatalog ?? MinimapProfileCatalog.CreateDefault();
+        _selectedClockProfileId = _clockProfileCatalog.DefaultProfile.Id;
+        _selectedMinimapProfileId = _minimapProfileCatalog.DefaultProfile.Id;
         foreach (ClockProfileCatalogError error in _clockProfileCatalog.Errors)
         {
             _logger.LogError(
@@ -187,7 +207,16 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
         ClearMinimapCommand = new RelayCommand(
             () => ClearRegion(RegionType.Minimap), () => CanEditRegions && MinimapRegion is not null);
         SaveLayoutCommand = new AsyncRelayCommand(
-            SaveLayoutAsync, () => BothRegionsValid && !string.IsNullOrWhiteSpace(LayoutName), SetCommandError);
+            SaveLayoutAsync, () => BothRegionsValid && _selectedLayoutId is not null, SetCommandError);
+        SaveLayoutAsCommand = new AsyncRelayCommand(
+            SaveLayoutAsAsync, () => BothRegionsValid && !string.IsNullOrWhiteSpace(LayoutName), SetCommandError);
+        ConfirmOverwriteCommand = new AsyncRelayCommand(
+            ConfirmOverwriteAsync, () => _pendingOverwriteName is not null, SetCommandError);
+        CancelOverwriteCommand = new RelayCommand(CancelOverwrite);
+        ResetToSavedCommand = new RelayCommand(ResetToSaved, () => _selectedLayoutId is not null);
+        ApplyRegionEditCommand = new RelayCommand(ApplyPrecisionEdit, () => IsPrecisionEditing);
+        CancelRegionEditCommand = new RelayCommand(CancelPrecisionEdit, () => IsPrecisionEditing);
+        UndoCurrentEditCommand = new RelayCommand(UndoPrecisionEdit, () => IsPrecisionEditing);
         LoadLayoutCommand = new AsyncRelayCommand(
             LoadLayoutAsync, () => !string.IsNullOrWhiteSpace(SelectedSavedLayout), SetCommandError);
         DeleteLayoutCommand = new AsyncRelayCommand(
@@ -234,6 +263,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
             }.OfType<string>());
     public bool HasUnsavedChanges => _regionEditor.HasUnsavedChanges;
     public string UnsavedStatus => HasUnsavedChanges ? "Unsaved changes" : "Saved";
+    public string LoadedLayout => _selectedLayoutPersistedName ?? "None";
     public NormalizedRegion? ClockRegion => _regionEditor.GetRegion(RegionType.Clock);
     public NormalizedRegion? MinimapRegion => _regionEditor.GetRegion(RegionType.Minimap);
     public string ClockCoordinates => FormatRegion(ClockRegion);
@@ -242,6 +272,84 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
     public string EditMode => _activeEditType is RegionType type
         ? $"Editing {type.ToString().ToUpperInvariant()}"
         : "Editing off";
+    public bool IsPrecisionEditing => _precisionSession is not null;
+    public int PrecisionEditorZIndex => IsPrecisionEditing ? 100 : -1;
+    public bool IsClockPrecisionEdit =>
+        _precisionSession?.SelectedRegionType == RegionType.Clock;
+    public bool IsMinimapPrecisionEdit =>
+        _precisionSession?.SelectedRegionType == RegionType.Minimap;
+    public ImageSource? PrecisionFrozenImage => _precisionFrozenImage;
+    public double PrecisionContextWidth =>
+        _precisionContext.Width * (_precisionSession?.Zoom ?? 1);
+    public double PrecisionContextHeight =>
+        _precisionContext.Height * (_precisionSession?.Zoom ?? 1);
+    public double PrecisionOverlayLeft =>
+        _precisionSession is null
+            ? 0
+            : (_precisionSession.PixelGeometry.X - _precisionContext.X) * _precisionSession.Zoom;
+    public double PrecisionOverlayTop =>
+        _precisionSession is null
+            ? 0
+            : (_precisionSession.PixelGeometry.Y - _precisionContext.Y) * _precisionSession.Zoom;
+    public double PrecisionOverlayWidth =>
+        (_precisionSession?.PixelGeometry.Width ?? 0) * (_precisionSession?.Zoom ?? 1);
+    public double PrecisionOverlayHeight =>
+        (_precisionSession?.PixelGeometry.Height ?? 0) * (_precisionSession?.Zoom ?? 1);
+    public Brush PrecisionBorderBrush => IsClockPrecisionEdit ? Brushes.Gold : Brushes.DeepSkyBlue;
+    public string PrecisionEditorTitle =>
+        _precisionSession is null
+            ? "Precision region editor"
+            : $"Edit {_precisionSession.SelectedRegionType.ToString().ToUpperInvariant()}";
+    public string PrecisionZoom =>
+        _precisionSession is null ? string.Empty : $"{_precisionSession.Zoom * 100:0}%";
+    public string PixelRatio => _precisionSession is null
+        ? "—"
+        : $"{_precisionSession.Validation.PixelAspectRatio:0.###}:1";
+    public string PixelGeometryStatus
+    {
+        get
+        {
+            if (_precisionSession is null)
+            {
+                return "Not editing.";
+            }
+
+            RegionGeometryValidation validation = _precisionSession.Validation;
+            PixelRegion pixels = _precisionSession.PixelGeometry;
+            string shape = _precisionSession.SelectedRegionType == RegionType.Clock
+                ? $"{validation.PixelAspectRatio:0.###}:1"
+                : $"{pixels.Width} × {pixels.Height}";
+            return validation.IsValid
+                ? $"{_precisionSession.SelectedRegionType.ToString().ToUpperInvariant()} geometry: Valid — {shape}"
+                : $"{_precisionSession.SelectedRegionType.ToString().ToUpperInvariant()} geometry: Invalid — {validation.Error}";
+        }
+    }
+    public string PixelValidationMessage => _pixelValidationMessage ?? string.Empty;
+    public string PixelX
+    {
+        get => _pixelX;
+        set => SetPixelField(ref _pixelX, value, nameof(PixelX));
+    }
+    public string PixelY
+    {
+        get => _pixelY;
+        set => SetPixelField(ref _pixelY, value, nameof(PixelY));
+    }
+    public string PixelWidth
+    {
+        get => _pixelWidth;
+        set => SetPixelField(ref _pixelWidth, value, nameof(PixelWidth));
+    }
+    public string PixelHeight
+    {
+        get => _pixelHeight;
+        set => SetPixelField(ref _pixelHeight, value, nameof(PixelHeight));
+    }
+    public string PixelSize
+    {
+        get => _pixelSize;
+        set => SetPixelField(ref _pixelSize, value, nameof(PixelSize));
+    }
 
     public string LayoutName
     {
@@ -250,7 +358,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
         {
             if (Set(ref _layoutName, value))
             {
-                SaveLayoutCommand.RaiseCanExecuteChanged();
+                SaveLayoutAsCommand.RaiseCanExecuteChanged();
             }
         }
     }
@@ -268,9 +376,29 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
         }
     }
 
-    public bool OverwriteLayout { get => _overwriteLayout; set => Set(ref _overwriteLayout, value); }
+    public bool IsOverwriteConfirmationVisible => _pendingOverwriteName is not null;
+    public string OverwriteWarning => _pendingOverwriteName is null
+        ? string.Empty
+        : $"A layout named '{_pendingOverwriteName}' already exists. Confirming replaces that target only; the loaded layout is unchanged.";
     public IReadOnlyList<ClockProfileCatalogEntry> AvailableClockProfiles =>
         _clockProfileCatalog.Profiles;
+
+    public void RefreshProfileCatalogs(
+        ClockProfileCatalog clockCatalog,
+        MinimapProfileCatalog minimapCatalog)
+    {
+        ArgumentNullException.ThrowIfNull(clockCatalog);
+        ArgumentNullException.ThrowIfNull(minimapCatalog);
+        if (_captureState.IsCapturing)
+        {
+            _pendingClockProfileCatalog = clockCatalog;
+            _pendingMinimapProfileCatalog = minimapCatalog;
+            return;
+        }
+
+        ApplyProfileCatalogRefresh(clockCatalog, minimapCatalog);
+    }
+
     public IReadOnlyList<double> PlaybackSpeeds { get; } = [0.25, 0.5, 1, 2, 4, 8];
     public bool CanConfigureClockRecognition => !_captureState.IsCapturing;
     public bool RecognitionEnabled
@@ -295,11 +423,27 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
         get => _selectedClockProfileId;
         set
         {
-            if (!CanConfigureClockRecognition || !Set(ref _selectedClockProfileId, value))
+            if (!CanConfigureClockRecognition ||
+                string.Equals(_selectedClockProfileId, value, StringComparison.Ordinal))
             {
                 return;
             }
 
+            if (!_clockProfileCatalog.TryGet(value, out _))
+            {
+                ClockProfileCatalogEntry? replacement =
+                    _clockProfileCatalog.SuggestReplacement(value);
+                _clockProfileWarning = MissingProfileWarning(
+                    "Clock",
+                    value,
+                    replacement?.Id);
+                OnPropertyChanged(nameof(ClockProfileWarning));
+                return;
+            }
+
+            _selectedClockProfileId = value;
+            _clockSelectionIsExplicit = true;
+            OnPropertyChanged();
             ApplyClockSettings();
             _clockProfileWarning = null;
             _logger.LogInformation("Clock profile selected: {ProfileId}.", value);
@@ -381,8 +525,12 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
 
             if (!_minimapProfileCatalog.TryGet(value, out MinimapProfileCatalogEntry? entry))
             {
-                _minimapProfileWarning =
-                    $"Minimap profile '{value}' could not be loaded. Select an available profile; the active profile was not changed.";
+                MinimapProfileCatalogEntry? replacement =
+                    _minimapProfileCatalog.SuggestReplacement(value);
+                _minimapProfileWarning = MissingProfileWarning(
+                    "Minimap",
+                    value,
+                    replacement?.Id);
                 _logger.LogError("Unavailable minimap profile selected: {ProfileId}.", value);
                 OnPropertyChanged(nameof(MinimapProfileWarning));
                 return;
@@ -390,6 +538,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
 
             _minimapWorker.SetValidator(new StructuralMinimapValidator(entry!.Profile));
             _selectedMinimapProfileId = value;
+            _minimapSelectionIsExplicit = true;
             _minimapProfileWarning = null;
             OnPropertyChanged();
             OnPropertyChanged(nameof(MinimapProfileName));
@@ -520,6 +669,13 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
     public RelayCommand ClearClockCommand { get; }
     public RelayCommand ClearMinimapCommand { get; }
     public AsyncRelayCommand SaveLayoutCommand { get; }
+    public AsyncRelayCommand SaveLayoutAsCommand { get; }
+    public AsyncRelayCommand ConfirmOverwriteCommand { get; }
+    public RelayCommand CancelOverwriteCommand { get; }
+    public RelayCommand ResetToSavedCommand { get; }
+    public RelayCommand ApplyRegionEditCommand { get; }
+    public RelayCommand CancelRegionEditCommand { get; }
+    public RelayCommand UndoCurrentEditCommand { get; }
     public AsyncRelayCommand LoadLayoutCommand { get; }
     public AsyncRelayCommand DeleteLayoutCommand { get; }
 
@@ -601,13 +757,118 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
             result.RegionType,
             result.Operation,
             result.After);
+        if (result.Operation == RegionEditOperation.Create &&
+            result.After is NormalizedRegion created)
+        {
+            OpenPrecisionEditor(result.RegionType, created);
+        }
         RaiseRegionState();
     }
 
     public void CancelEdit()
     {
+        if (IsPrecisionEditing)
+        {
+            CancelPrecisionEdit();
+            return;
+        }
+
         _regionEditor.Cancel();
         RaiseRegionState();
+    }
+
+    public bool NudgePrecisionRegion(int deltaX, int deltaY, bool resize)
+    {
+        if (_precisionSession is null)
+        {
+            return false;
+        }
+
+        PixelGeometryUpdate update = resize
+            ? _precisionSession.ResizeByPixels(deltaX, deltaY)
+            : _precisionSession.MoveByPixels(deltaX, deltaY);
+        UpdateAfterPrecisionChange(update);
+        return true;
+    }
+
+    public bool PrecisionPointerDown(double x, double y)
+    {
+        if (_precisionSession is null)
+        {
+            return false;
+        }
+
+        PixelRegion region = _precisionSession.PixelGeometry;
+        double sourceX = (x / _precisionSession.Zoom) + _precisionContext.X;
+        double sourceY = (y / _precisionSession.Zoom) + _precisionContext.Y;
+        const double hitPadding = 3;
+        bool nearRight = Math.Abs(sourceX - region.Right) <= hitPadding;
+        bool nearBottom = Math.Abs(sourceY - region.Bottom) <= hitPadding;
+        _precisionPointerResize = nearRight && nearBottom;
+        if (!_precisionPointerResize &&
+            (sourceX < region.X || sourceX > region.Right ||
+             sourceY < region.Y || sourceY > region.Bottom))
+        {
+            return false;
+        }
+
+        _precisionPointerStart = new Point(sourceX, sourceY);
+        _precisionPointerOriginal = region;
+        return true;
+    }
+
+    public void PrecisionPointerMove(double x, double y)
+    {
+        if (_precisionSession is null || _precisionPointerOriginal is not PixelRegion original)
+        {
+            return;
+        }
+
+        int dx = (int)Math.Round(
+            ((x / _precisionSession.Zoom) + _precisionContext.X) - _precisionPointerStart.X);
+        int dy = (int)Math.Round(
+            ((y / _precisionSession.Zoom) + _precisionContext.Y) - _precisionPointerStart.Y);
+        PixelGeometryUpdate update;
+        if (_precisionPointerResize)
+        {
+            if (_precisionSession.SelectedRegionType == RegionType.Minimap)
+            {
+                int size = Math.Max(1, original.Width + (Math.Abs(dx) >= Math.Abs(dy) ? dx : dy));
+                update = _precisionSession.SetPixelGeometry(original.X, original.Y, size);
+            }
+            else
+            {
+                int width = Math.Max(1, original.Width + dx);
+                int height = Math.Max(1, original.Height + dy);
+                if (width < height * 2)
+                {
+                    height = Math.Max(1, width / 2);
+                }
+                update = _precisionSession.SetPixelGeometry(
+                    original.X,
+                    original.Y,
+                    width,
+                    height);
+            }
+        }
+        else
+        {
+            int sourceWidth = (int)Math.Round(_regionEditor.SourceSize.Width);
+            int sourceHeight = (int)Math.Round(_regionEditor.SourceSize.Height);
+            update = _precisionSession.SetPixelGeometry(
+                Math.Clamp(original.X + dx, 0, sourceWidth - original.Width),
+                Math.Clamp(original.Y + dy, 0, sourceHeight - original.Height),
+                original.Width,
+                original.Height);
+        }
+
+        UpdateAfterPrecisionChange(update);
+    }
+
+    public void PrecisionPointerUp()
+    {
+        _precisionPointerOriginal = null;
+        _precisionPointerResize = false;
     }
 
     public void DeleteSelectedRegion()
@@ -656,7 +917,226 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
         _layoutAspectRatio ??= CurrentAspectRatio();
         _activeEditType = type;
         _regionEditor.Select(type);
+        if (_regionEditor.GetRegion(type) is NormalizedRegion region)
+        {
+            OpenPrecisionEditor(type, region);
+        }
         RaiseRegionState();
+    }
+
+    private void OpenPrecisionEditor(RegionType type, NormalizedRegion region)
+    {
+        _regionEditor.Cancel();
+        _precisionSession = new RegionEditSession(
+            type,
+            region,
+            _regionEditor.SourceSize);
+        PixelRegion pixels = _precisionSession.PixelGeometry;
+        int sourceWidth = (int)Math.Round(_regionEditor.SourceSize.Width);
+        int sourceHeight = (int)Math.Round(_regionEditor.SourceSize.Height);
+        int horizontalContext = type == RegionType.Clock ? 24 : 40;
+        int verticalContext = type == RegionType.Clock ? 18 : 40;
+        int left = Math.Max(0, pixels.X - horizontalContext);
+        int top = Math.Max(0, pixels.Y - verticalContext);
+        int right = Math.Min(sourceWidth, pixels.Right + horizontalContext);
+        int bottom = Math.Min(sourceHeight, pixels.Bottom + verticalContext);
+        _precisionContext = new Int32Rect(left, top, right - left, bottom - top);
+        if (_previewImage is not null)
+        {
+            WriteableBitmap frozen = new(_previewImage);
+            frozen.Freeze();
+            CroppedBitmap cropped = new(frozen, _precisionContext);
+            cropped.Freeze();
+            _precisionFrozenImage = cropped;
+        }
+
+        RefreshPixelFields();
+        RaisePrecisionState();
+    }
+
+    private void ApplyPrecisionEdit()
+    {
+        if (_precisionSession is null)
+        {
+            return;
+        }
+
+        RegionType type = _precisionSession.SelectedRegionType;
+        _regionEditor.SetWorkingRegion(type, _precisionSession.Apply());
+        ClosePrecisionEditor();
+        RaiseRegionState();
+    }
+
+    private void CancelPrecisionEdit()
+    {
+        if (_precisionSession is null)
+        {
+            return;
+        }
+
+        _precisionSession.Cancel();
+        ClosePrecisionEditor();
+        RaiseRegionState();
+    }
+
+    private void UndoPrecisionEdit()
+    {
+        if (_precisionSession is null)
+        {
+            return;
+        }
+
+        NormalizedRegion original = _precisionSession.Cancel();
+        RegionType type = _precisionSession.SelectedRegionType;
+        _precisionSession = new RegionEditSession(
+            type,
+            original,
+            _regionEditor.SourceSize,
+            zoom: _precisionSession.Zoom);
+        RefreshPixelFields();
+        RaisePrecisionState();
+    }
+
+    private void ClosePrecisionEditor()
+    {
+        _precisionSession = null;
+        _precisionFrozenImage = null;
+        _precisionPointerOriginal = null;
+        _pixelValidationMessage = null;
+        RaisePrecisionState();
+    }
+
+    private void ResetToSaved()
+    {
+        CancelPrecisionEdit();
+        _regionEditor.ResetToSaved();
+        _activeEditType = null;
+        _layoutValidationMessage = $"Restored loaded layout '{LoadedLayout}'.";
+        OnPropertyChanged(nameof(LayoutValidationMessage));
+        RaiseRegionState();
+    }
+
+    private void SetPixelField(ref string field, string value, string propertyName)
+    {
+        if (field == value)
+        {
+            return;
+        }
+
+        field = value;
+        OnPropertyChanged(propertyName);
+        if (!_updatingPixelFields)
+        {
+            CommitPixelFields();
+        }
+    }
+
+    private void CommitPixelFields()
+    {
+        if (_precisionSession is null)
+        {
+            return;
+        }
+
+        if (!int.TryParse(_pixelX, NumberStyles.Integer, CultureInfo.InvariantCulture, out int x) ||
+            !int.TryParse(_pixelY, NumberStyles.Integer, CultureInfo.InvariantCulture, out int y))
+        {
+            SetPixelError("X and Y must be whole source-pixel numbers.");
+            return;
+        }
+
+        PixelGeometryUpdate update;
+        if (_precisionSession.SelectedRegionType == RegionType.Minimap)
+        {
+            if (!int.TryParse(_pixelSize, NumberStyles.Integer, CultureInfo.InvariantCulture, out int size))
+            {
+                SetPixelError("Size must be a whole source-pixel number.");
+                return;
+            }
+            update = _precisionSession.SetPixelGeometry(x, y, size);
+        }
+        else
+        {
+            if (!int.TryParse(_pixelWidth, NumberStyles.Integer, CultureInfo.InvariantCulture, out int width) ||
+                !int.TryParse(_pixelHeight, NumberStyles.Integer, CultureInfo.InvariantCulture, out int height))
+            {
+                SetPixelError("Width and Height must be whole source-pixel numbers.");
+                return;
+            }
+            update = _precisionSession.SetPixelGeometry(x, y, width, height);
+        }
+
+        UpdateAfterPrecisionChange(update);
+    }
+
+    private void UpdateAfterPrecisionChange(PixelGeometryUpdate update)
+    {
+        _pixelValidationMessage = update.Error;
+        if (update.IsValid)
+        {
+            RefreshPixelFields();
+            UpdateOverlayGeometry();
+        }
+        RaisePrecisionState();
+    }
+
+    private void SetPixelError(string error)
+    {
+        _pixelValidationMessage = error;
+        OnPropertyChanged(nameof(PixelValidationMessage));
+    }
+
+    private void RefreshPixelFields()
+    {
+        if (_precisionSession is null)
+        {
+            return;
+        }
+
+        PixelRegion pixels = _precisionSession.PixelGeometry;
+        _updatingPixelFields = true;
+        _pixelX = pixels.X.ToString(CultureInfo.InvariantCulture);
+        _pixelY = pixels.Y.ToString(CultureInfo.InvariantCulture);
+        _pixelWidth = pixels.Width.ToString(CultureInfo.InvariantCulture);
+        _pixelHeight = pixels.Height.ToString(CultureInfo.InvariantCulture);
+        _pixelSize = pixels.Width.ToString(CultureInfo.InvariantCulture);
+        _updatingPixelFields = false;
+        OnPropertyChanged(nameof(PixelX));
+        OnPropertyChanged(nameof(PixelY));
+        OnPropertyChanged(nameof(PixelWidth));
+        OnPropertyChanged(nameof(PixelHeight));
+        OnPropertyChanged(nameof(PixelSize));
+    }
+
+    private void RaisePrecisionState()
+    {
+        OnPropertyChanged(nameof(IsPrecisionEditing));
+        OnPropertyChanged(nameof(PrecisionEditorZIndex));
+        OnPropertyChanged(nameof(IsClockPrecisionEdit));
+        OnPropertyChanged(nameof(IsMinimapPrecisionEdit));
+        OnPropertyChanged(nameof(PrecisionFrozenImage));
+        OnPropertyChanged(nameof(PrecisionContextWidth));
+        OnPropertyChanged(nameof(PrecisionContextHeight));
+        OnPropertyChanged(nameof(PrecisionOverlayLeft));
+        OnPropertyChanged(nameof(PrecisionOverlayTop));
+        OnPropertyChanged(nameof(PrecisionOverlayWidth));
+        OnPropertyChanged(nameof(PrecisionOverlayHeight));
+        OnPropertyChanged(nameof(PrecisionBorderBrush));
+        OnPropertyChanged(nameof(PrecisionEditorTitle));
+        OnPropertyChanged(nameof(PrecisionZoom));
+        OnPropertyChanged(nameof(PixelRatio));
+        OnPropertyChanged(nameof(PixelGeometryStatus));
+        OnPropertyChanged(nameof(PixelValidationMessage));
+        ApplyRegionEditCommand.RaiseCanExecuteChanged();
+        CancelRegionEditCommand.RaiseCanExecuteChanged();
+        UndoCurrentEditCommand.RaiseCanExecuteChanged();
+    }
+
+    private void RaiseOverwriteState()
+    {
+        OnPropertyChanged(nameof(IsOverwriteConfirmationVisible));
+        OnPropertyChanged(nameof(OverwriteWarning));
+        ConfirmOverwriteCommand.RaiseCanExecuteChanged();
     }
 
     private void ClearRegion(RegionType type)
@@ -672,6 +1152,58 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
 
     private async Task SaveLayoutAsync()
     {
+        if (_selectedLayoutId is null)
+        {
+            return;
+        }
+
+        await PersistLayoutAsync(_selectedLayoutId, overwrite: true, selectSavedLayout: true);
+    }
+
+    private async Task SaveLayoutAsAsync()
+    {
+        string target = LayoutName.Trim();
+        if (string.Equals(target, _selectedLayoutId, StringComparison.OrdinalIgnoreCase))
+        {
+            _layoutValidationMessage =
+                $"'{target}' is the loaded layout. Use Save to update it, or enter a different name for Save As.";
+            OnPropertyChanged(nameof(LayoutValidationMessage));
+            return;
+        }
+
+        if (AvailableSavedLayouts.Any(
+                name => string.Equals(name, target, StringComparison.OrdinalIgnoreCase)))
+        {
+            _pendingOverwriteName = target;
+            RaiseOverwriteState();
+            return;
+        }
+
+        await PersistLayoutAsync(target, overwrite: false, selectSavedLayout: true);
+    }
+
+    private async Task ConfirmOverwriteAsync()
+    {
+        if (_pendingOverwriteName is not string target)
+        {
+            return;
+        }
+
+        await PersistLayoutAsync(target, overwrite: true, selectSavedLayout: true);
+        _pendingOverwriteName = null;
+        RaiseOverwriteState();
+    }
+
+    private void CancelOverwrite()
+    {
+        _pendingOverwriteName = null;
+        RaiseOverwriteState();
+        _layoutValidationMessage = "Save As overwrite canceled; no layout was changed.";
+        OnPropertyChanged(nameof(LayoutValidationMessage));
+    }
+
+    private async Task PersistLayoutAsync(string targetName, bool overwrite, bool selectSavedLayout)
+    {
         if (ClockRegion is not NormalizedRegion clock || MinimapRegion is not NormalizedRegion minimap)
         {
             return;
@@ -679,20 +1211,27 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
 
         double? aspect = CurrentAspectRatio();
         CaptureLayout layout = new(
-            LayoutName.Trim(),
+            targetName,
             clock,
             minimap,
             aspect,
             SelectedClockProfileId);
-        await _layoutStore.SaveAsync(layout, OverwriteLayout);
+        await _layoutStore.SaveAsync(layout, overwrite);
         _regionEditor.MarkSaved();
         _layoutAspectRatio = aspect;
-        SelectedSavedLayout = layout.Name;
+        if (selectSavedLayout)
+        {
+            _selectedLayoutId = layout.Name;
+            _selectedLayoutPersistedName = layout.Name;
+            SelectedSavedLayout = layout.Name;
+            LayoutName = layout.Name;
+            OnPropertyChanged(nameof(LoadedLayout));
+        }
         _layoutValidationMessage = $"Saved layout '{layout.Name}'.";
         _logger.LogInformation(
             "Capture layout {LayoutName} saved with overwrite={Overwrite}.",
             layout.Name,
-            OverwriteLayout);
+            overwrite);
         await RefreshLayoutsAsync();
         RaiseRegionState();
         OnPropertyChanged(nameof(LayoutValidationMessage));
@@ -713,6 +1252,9 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
                 RestorePersistedClockProfile(profileId, layout.Name);
             }
             LayoutName = layout.Name;
+            _selectedLayoutId = name;
+            _selectedLayoutPersistedName = layout.Name;
+            OnPropertyChanged(nameof(LoadedLayout));
             _activeEditType = null;
             _layoutValidationMessage = geometryWarnings.Count == 0
                 ? $"Loaded layout '{layout.Name}'."
@@ -736,6 +1278,12 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
         _logger.LogInformation("Capture layout {LayoutName} deleted.", name);
         _layoutValidationMessage = $"Deleted layout '{name}'.";
         SelectedSavedLayout = null;
+        if (string.Equals(_selectedLayoutId, name, StringComparison.OrdinalIgnoreCase))
+        {
+            _selectedLayoutId = null;
+            _selectedLayoutPersistedName = null;
+            OnPropertyChanged(nameof(LoadedLayout));
+        }
         await RefreshLayoutsAsync();
         OnPropertyChanged(nameof(LayoutValidationMessage));
     }
@@ -803,6 +1351,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
                 {
                     _ = StopSessionRecordingAsync();
                 }
+                ApplyPendingProfileCatalogRefresh();
             }
             RaiseCommandStates();
         });
@@ -870,7 +1419,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
                 payload.Stride);
             UpdateCrop(
                 RegionType.Clock,
-                ClockRegion,
+                DisplayRegion(RegionType.Clock),
                 width,
                 height,
                 payload,
@@ -879,7 +1428,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
                 frame.SourceTimestamp);
             UpdateCrop(
                 RegionType.Minimap,
-                MinimapRegion,
+                DisplayRegion(RegionType.Minimap),
                 width,
                 height,
                 payload,
@@ -1543,6 +2092,112 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
         OnPropertyChanged(nameof(ActiveClockProfileId));
     }
 
+    private void ApplyPendingProfileCatalogRefresh()
+    {
+        if (_pendingClockProfileCatalog is null ||
+            _pendingMinimapProfileCatalog is null)
+        {
+            return;
+        }
+
+        ClockProfileCatalog clockCatalog = _pendingClockProfileCatalog;
+        MinimapProfileCatalog minimapCatalog = _pendingMinimapProfileCatalog;
+        _pendingClockProfileCatalog = null;
+        _pendingMinimapProfileCatalog = null;
+        ApplyProfileCatalogRefresh(clockCatalog, minimapCatalog);
+    }
+
+    private void ApplyProfileCatalogRefresh(
+        ClockProfileCatalog clockCatalog,
+        MinimapProfileCatalog minimapCatalog)
+    {
+        if (!_clockSelectionIsExplicit)
+        {
+            _clockProfileCatalog = clockCatalog;
+            _selectedClockProfileId = clockCatalog.DefaultProfile.Id;
+            _clockProfileWarning = null;
+            ApplyClockSettings();
+            RaiseClockProfileProperties();
+        }
+        else if (clockCatalog.TryGet(_selectedClockProfileId, out _))
+        {
+            _clockProfileCatalog = clockCatalog;
+            _clockProfileWarning = null;
+            ApplyClockSettings();
+            RaiseClockProfileProperties();
+        }
+        else
+        {
+            ClockProfileCatalogEntry? replacement =
+                clockCatalog.SuggestReplacement(_selectedClockProfileId);
+            _clockProfileWarning = MissingProfileWarning(
+                "Selected clock",
+                _selectedClockProfileId,
+                replacement?.Id);
+            OnPropertyChanged(nameof(ClockProfileWarning));
+        }
+
+        if (!_minimapSelectionIsExplicit)
+        {
+            _minimapProfileCatalog = minimapCatalog;
+            _selectedMinimapProfileId = minimapCatalog.DefaultProfile.Id;
+            _minimapProfileWarning = null;
+            _minimapWorker.SetValidator(new StructuralMinimapValidator(
+                minimapCatalog.DefaultProfile.Profile));
+            RaiseMinimapProfileProperties();
+        }
+        else if (minimapCatalog.TryGet(
+                     _selectedMinimapProfileId,
+                     out MinimapProfileCatalogEntry? selected))
+        {
+            _minimapProfileCatalog = minimapCatalog;
+            _minimapProfileWarning = null;
+            _minimapWorker.SetValidator(new StructuralMinimapValidator(
+                selected!.Profile));
+            RaiseMinimapProfileProperties();
+        }
+        else
+        {
+            MinimapProfileCatalogEntry? replacement =
+                minimapCatalog.SuggestReplacement(_selectedMinimapProfileId);
+            _minimapProfileWarning = MissingProfileWarning(
+                "Selected minimap",
+                _selectedMinimapProfileId,
+                replacement?.Id);
+            OnPropertyChanged(nameof(MinimapProfileWarning));
+        }
+    }
+
+    private void RaiseClockProfileProperties()
+    {
+        OnPropertyChanged(nameof(AvailableClockProfiles));
+        OnPropertyChanged(nameof(SelectedClockProfileId));
+        OnPropertyChanged(nameof(SelectedClockProfileName));
+        OnPropertyChanged(nameof(SelectedClockProfileTemplateCount));
+        OnPropertyChanged(nameof(ActiveClockProfileId));
+        OnPropertyChanged(nameof(ClockProfileWarning));
+    }
+
+    private void RaiseMinimapProfileProperties()
+    {
+        OnPropertyChanged(nameof(AvailableMinimapProfiles));
+        OnPropertyChanged(nameof(MinimapProfileId));
+        OnPropertyChanged(nameof(MinimapProfileName));
+        OnPropertyChanged(nameof(MinimapProfileVersion));
+        OnPropertyChanged(nameof(MinimapCalibrationStatus));
+        OnPropertyChanged(nameof(MinimapProfileSource));
+        OnPropertyChanged(nameof(ActiveMinimapProfileId));
+        OnPropertyChanged(nameof(MinimapProfileWarning));
+    }
+
+    private static string MissingProfileWarning(
+        string profileKind,
+        string missingProfileId,
+        string? replacementId) =>
+        replacementId is null
+            ? $"{profileKind} profile '{missingProfileId}' is unavailable. The current selection was not changed; no compatible replacement is installed."
+            : $"{profileKind} profile '{missingProfileId}' is unavailable. The current selection was not changed. Suggested compatible replacement: '{replacementId}'.";
+
     private ClockRecognitionProfile SelectedProfile() =>
         SelectedCatalogEntry().Profile.WithPlaybackSpeed(_selectedPlaybackSpeed);
 
@@ -1559,17 +2214,59 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
     {
         if (_clockProfileCatalog.TryGet(profileId, out _))
         {
-            SelectedClockProfileId = profileId;
+            _clockSelectionIsExplicit = true;
+            _clockProfileWarning = null;
+            if (!string.Equals(_selectedClockProfileId, profileId, StringComparison.Ordinal))
+            {
+                _selectedClockProfileId = profileId;
+                ApplyClockSettings();
+                OnPropertyChanged(nameof(SelectedClockProfileId));
+                OnPropertyChanged(nameof(SelectedClockProfileName));
+                OnPropertyChanged(nameof(SelectedClockProfileTemplateCount));
+            }
             return true;
         }
 
-        _clockProfileWarning =
-            $"Saved clock profile '{profileId}' is unavailable. Select an installed profile; the current selection was not changed.";
+        ClockProfileCatalogEntry? replacement =
+            _clockProfileCatalog.SuggestReplacement(profileId);
+        _clockProfileWarning = MissingProfileWarning(
+            "Saved clock",
+            profileId,
+            replacement?.Id);
         _logger.LogWarning(
             "Capture layout {LayoutName} references unavailable clock profile {ProfileId}.",
             sourceName,
             profileId);
         OnPropertyChanged(nameof(ClockProfileWarning));
+        return false;
+    }
+
+    internal bool RestorePersistedMinimapProfile(string profileId, string sourceName)
+    {
+        if (_minimapProfileCatalog.TryGet(profileId, out MinimapProfileCatalogEntry? entry))
+        {
+            _minimapSelectionIsExplicit = true;
+            _minimapProfileWarning = null;
+            if (!string.Equals(_selectedMinimapProfileId, profileId, StringComparison.Ordinal))
+            {
+                _minimapWorker.SetValidator(new StructuralMinimapValidator(entry!.Profile));
+                _selectedMinimapProfileId = profileId;
+                RaiseMinimapProfileProperties();
+            }
+            return true;
+        }
+
+        MinimapProfileCatalogEntry? replacement =
+            _minimapProfileCatalog.SuggestReplacement(profileId);
+        _minimapProfileWarning = MissingProfileWarning(
+            "Saved minimap",
+            profileId,
+            replacement?.Id);
+        _logger.LogWarning(
+            "Persisted source {SourceName} references unavailable minimap profile {ProfileId}.",
+            sourceName,
+            profileId);
+        OnPropertyChanged(nameof(MinimapProfileWarning));
         return false;
     }
 
@@ -1671,8 +2368,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
             return;
         }
 
-        UpdateOverlay(ClockOverlay, ClockRegion);
-        UpdateOverlay(MinimapOverlay, MinimapRegion);
+        UpdateOverlay(ClockOverlay, DisplayRegion(RegionType.Clock));
+        UpdateOverlay(MinimapOverlay, DisplayRegion(RegionType.Minimap));
     }
 
     private void UpdateOverlay(RegionOverlayViewModel overlay, NormalizedRegion? region)
@@ -1726,7 +2423,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
         }
 
         RegionOverlayViewModel overlay = type == RegionType.Clock ? ClockOverlay : MinimapOverlay;
-        const double radius = 7;
+        const double radius = RegionHandleDesign.HitTargetSize / 2;
         (ResizeHandle Handle, double X, double Y)[] handles =
         [
             (ResizeHandle.TopLeft, overlay.Left, overlay.Top),
@@ -1740,6 +2437,11 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
         ];
         foreach ((ResizeHandle handle, double handleX, double handleY) in handles)
         {
+            if (!RegionHandleDesign.For(type).Contains(handle))
+            {
+                continue;
+            }
+
             if (Math.Abs(x - handleX) <= radius && Math.Abs(y - handleY) <= radius)
             {
                 return handle;
@@ -1812,6 +2514,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
         ClearClockCommand.RaiseCanExecuteChanged();
         ClearMinimapCommand.RaiseCanExecuteChanged();
         SaveLayoutCommand.RaiseCanExecuteChanged();
+        SaveLayoutAsCommand.RaiseCanExecuteChanged();
+        ResetToSavedCommand.RaiseCanExecuteChanged();
         StartSessionRecordingCommand.RaiseCanExecuteChanged();
     }
 
@@ -1823,12 +2527,16 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IAsyncDisposab
 
     private static Int32Rect ToPixelRect(NormalizedRegion region, int width, int height)
     {
-        int left = Math.Clamp((int)Math.Floor(region.X * width), 0, width - 1);
-        int top = Math.Clamp((int)Math.Floor(region.Y * height), 0, height - 1);
-        int right = Math.Clamp((int)Math.Ceiling((region.X + region.Width) * width), left + 1, width);
-        int bottom = Math.Clamp((int)Math.Ceiling((region.Y + region.Height) * height), top + 1, height);
-        return new Int32Rect(left, top, right - left, bottom - top);
+        PixelRegion pixels = PixelRegionGeometry.ToPixels(
+            region,
+            new RegionSourceSize(width, height));
+        return new Int32Rect(pixels.X, pixels.Y, pixels.Width, pixels.Height);
     }
+
+    private NormalizedRegion? DisplayRegion(RegionType type) =>
+        _precisionSession?.SelectedRegionType == type
+            ? _precisionSession.WorkingRegion
+            : _regionEditor.GetRegion(type);
 
     private static WriteableBitmap CreateBitmap(int width, int height) =>
         new(width, height, 96, 96, PixelFormats.Bgra32, null);

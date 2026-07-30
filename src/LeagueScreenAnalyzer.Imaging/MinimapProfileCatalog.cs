@@ -14,6 +14,7 @@ public enum MinimapProfileProvenance
 public sealed record MinimapProfileCatalogEntry(
     string Id,
     string DisplayName,
+    string Family,
     int Version,
     bool IsCalibrated,
     MinimapProfileProvenance Provenance,
@@ -37,19 +38,24 @@ public sealed class MinimapProfileCatalog
     public const string OverrideEnvironmentVariable = "LEAGUE_SCREEN_ANALYZER_MINIMAP_PROFILES";
 
     private readonly IReadOnlyDictionary<string, MinimapProfileCatalogEntry> _byId;
+    private readonly string _defaultFamily;
 
     private MinimapProfileCatalog(
         IReadOnlyList<MinimapProfileCatalogEntry> profiles,
-        IReadOnlyList<MinimapProfileCatalogError> errors)
+        IReadOnlyList<MinimapProfileCatalogError> errors,
+        string defaultFamily)
     {
         Profiles = profiles;
         Errors = errors;
+        _defaultFamily = defaultFamily;
         _byId = profiles.ToDictionary(profile => profile.Id, StringComparer.Ordinal);
     }
 
     public IReadOnlyList<MinimapProfileCatalogEntry> Profiles { get; }
 
     public IReadOnlyList<MinimapProfileCatalogError> Errors { get; }
+    public MinimapProfileCatalogEntry DefaultProfile =>
+        GetHighestCompatible(_defaultFamily);
 
     public MinimapProfileCatalogEntry Get(string id)
     {
@@ -67,6 +73,22 @@ public sealed class MinimapProfileCatalog
 
     public bool TryGet(string id, out MinimapProfileCatalogEntry? entry) =>
         _byId.TryGetValue(id, out entry);
+
+    public MinimapProfileCatalogEntry GetHighestCompatible(string family) =>
+        ProfileVersionSelection.HighestCompatible(
+            Profiles,
+            family,
+            profile => profile.Family,
+            profile => profile.Version);
+
+    public MinimapProfileCatalogEntry? SuggestReplacement(string unavailableId) =>
+        ProfileVersionKey.TryParseId(unavailableId, out ProfileVersionKey key) &&
+        Profiles.Any(profile => string.Equals(
+            profile.Family,
+            key.Family,
+            StringComparison.Ordinal))
+            ? GetHighestCompatible(key.Family)
+            : null;
 
     public MinimapValidationProfile Resolve(string pathOrId)
     {
@@ -142,6 +164,7 @@ public sealed class MinimapProfileCatalog
                         MinimapProfileProvenance.BuiltIn,
                         null)
             };
+        string defaultFamily = profiles.Values.First().Family;
         HashSet<string> visitedFiles = new(StringComparer.OrdinalIgnoreCase);
         List<MinimapProfileCatalogError> errors = [];
         List<(MinimapValidationProfile Profile, string Path, MinimapProfileProvenance Provenance)>
@@ -166,8 +189,11 @@ public sealed class MinimapProfileCatalog
 
                 try
                 {
+                    MinimapValidationProfile profile =
+                        MinimapProfileSerializer.Load(profilePath);
+                    _ = ProfileVersionKey.Parse(profile.Id, profile.Version);
                     discovered.Add((
-                        MinimapProfileSerializer.Load(profilePath),
+                        profile,
                         profilePath,
                         root.Provenance));
                 }
@@ -194,7 +220,7 @@ public sealed class MinimapProfileCatalog
                 {
                     errors.Add(new MinimapProfileCatalogError(
                         duplicate.Path,
-                        $"Duplicate minimap profile ID '{group.Key}' was rejected; no profile may silently replace another."));
+                        $"Duplicate minimap profile ID '{group.Key}' and family/version entry was rejected; no profile may silently replace another."));
                 }
                 continue;
             }
@@ -220,23 +246,43 @@ public sealed class MinimapProfileCatalog
                 candidate.Path);
         }
 
+        foreach (IGrouping<(string Family, int Version), MinimapProfileCatalogEntry> duplicate
+                 in ProfileVersionSelection.DuplicateFamilyVersions(
+                     profiles.Values,
+                     profile => profile.Family,
+                     profile => profile.Version))
+        {
+            foreach (MinimapProfileCatalogEntry entry in duplicate)
+            {
+                profiles.Remove(entry.Id);
+                errors.Add(new MinimapProfileCatalogError(
+                    entry.SourcePath,
+                    $"Duplicate minimap profile family/version '{duplicate.Key.Family}' v{duplicate.Key.Version} was rejected for profile '{entry.Id}'."));
+            }
+        }
+
         return new MinimapProfileCatalog(
             profiles.Values.OrderBy(value => value.Id, StringComparer.Ordinal).ToArray(),
-            errors.OrderBy(value => value.ProfilePath, StringComparer.Ordinal).ToArray());
+            errors.OrderBy(value => value.ProfilePath, StringComparer.Ordinal).ToArray(),
+            defaultFamily);
     }
 
     private static MinimapProfileCatalogEntry Entry(
         MinimapValidationProfile profile,
         MinimapProfileProvenance provenance,
-        string? sourcePath) =>
-        new(
+        string? sourcePath)
+    {
+        ProfileVersionKey key = ProfileVersionKey.Parse(profile.Id, profile.Version);
+        return new MinimapProfileCatalogEntry(
             profile.Id,
             profile.DisplayName,
+            key.Family,
             profile.Version,
             profile.CalibratedForCanonicalRecording,
             provenance,
             sourcePath,
             profile);
+    }
 
     private static bool ContainsProfiles(string root) =>
         Directory.Exists(root) &&

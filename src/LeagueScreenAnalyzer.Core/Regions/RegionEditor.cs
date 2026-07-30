@@ -88,7 +88,7 @@ public sealed class RegionEditor
 
     public RegionGeometryValidation? Validate(RegionType type) =>
         GetRegion(type) is NormalizedRegion region
-            ? _shapePolicy.Validate(type, region, _sourceSize)
+            ? _shapePolicy.ValidateStrict(type, region, _sourceSize)
             : null;
 
     public void Select(RegionType? type)
@@ -132,6 +132,28 @@ public sealed class RegionEditor
         EnsureNotEditing();
         _savedClock = _clock;
         _savedMinimap = _minimap;
+    }
+
+    public void ResetToSaved()
+    {
+        EnsureNotEditing();
+        _clock = _savedClock;
+        _minimap = _savedMinimap;
+        SelectedRegionType = null;
+    }
+
+    public void SetWorkingRegion(RegionType type, NormalizedRegion region)
+    {
+        EnsureNotEditing();
+        ArgumentNullException.ThrowIfNull(region);
+        RegionGeometryValidation validation = _shapePolicy.ValidateStrict(type, region, _sourceSize);
+        if (!validation.IsValid)
+        {
+            throw new ArgumentException(validation.Error, nameof(region));
+        }
+
+        Set(type, region);
+        SelectedRegionType = type;
     }
 
     public void BeginCreate(RegionType type, NormalizedPoint start)

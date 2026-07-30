@@ -24,8 +24,8 @@
                     <ControlTemplate TargetType="ContentControl">
                         <Grid ClipToBounds="False">
                             <Border BorderBrush="{Binding BorderBrush}"
-                                    BorderThickness="3"
-                                    Background="#18000000">
+                                    BorderThickness="1"
+                                    Background="#08000000">
                                 <TextBlock Padding="4,1"
                                            HorizontalAlignment="Left"
                                            VerticalAlignment="Top"
@@ -36,22 +36,26 @@
                                            Text="{Binding Label}" />
                             </Border>
                             <Grid Visibility="{Binding IsSelected, Converter={StaticResource BooleanToVisibility}}">
-                                <Rectangle Width="10" Height="10" Fill="White" Stroke="{Binding BorderBrush}"
-                                           HorizontalAlignment="Left" VerticalAlignment="Top" Margin="-5,-5,0,0" />
-                                <Rectangle Width="10" Height="10" Fill="White" Stroke="{Binding BorderBrush}"
-                                           HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,-5,0,0" />
-                                <Rectangle Width="10" Height="10" Fill="White" Stroke="{Binding BorderBrush}"
-                                           HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-5,-5,0" />
-                                <Rectangle Width="10" Height="10" Fill="White" Stroke="{Binding BorderBrush}"
-                                           HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,-5,0" />
-                                <Rectangle Width="10" Height="10" Fill="White" Stroke="{Binding BorderBrush}"
-                                           HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,-5,-5" />
-                                <Rectangle Width="10" Height="10" Fill="White" Stroke="{Binding BorderBrush}"
-                                           HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,-5" />
-                                <Rectangle Width="10" Height="10" Fill="White" Stroke="{Binding BorderBrush}"
-                                           HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="-5,0,0,-5" />
-                                <Rectangle Width="10" Height="10" Fill="White" Stroke="{Binding BorderBrush}"
-                                           HorizontalAlignment="Left" VerticalAlignment="Center" Margin="-5,0,0,0" />
+                                <Rectangle Width="6" Height="6" Fill="White" Stroke="{Binding BorderBrush}"
+                                           HorizontalAlignment="Left" VerticalAlignment="Top" Margin="-3,-3,0,0" />
+                                <Rectangle Width="6" Height="6" Fill="White" Stroke="{Binding BorderBrush}"
+                                           Visibility="{Binding AreEdgeHandlesVisible, Converter={StaticResource BooleanToVisibility}}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,-3,0,0" />
+                                <Rectangle Width="6" Height="6" Fill="White" Stroke="{Binding BorderBrush}"
+                                           HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-3,-3,0" />
+                                <Rectangle Width="6" Height="6" Fill="White" Stroke="{Binding BorderBrush}"
+                                           Visibility="{Binding AreEdgeHandlesVisible, Converter={StaticResource BooleanToVisibility}}"
+                                           HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,-3,0" />
+                                <Rectangle Width="6" Height="6" Fill="White" Stroke="{Binding BorderBrush}"
+                                           HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,-3,-3" />
+                                <Rectangle Width="6" Height="6" Fill="White" Stroke="{Binding BorderBrush}"
+                                           Visibility="{Binding AreEdgeHandlesVisible, Converter={StaticResource BooleanToVisibility}}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,-3" />
+                                <Rectangle Width="6" Height="6" Fill="White" Stroke="{Binding BorderBrush}"
+                                           HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="-3,0,0,-3" />
+                                <Rectangle Width="6" Height="6" Fill="White" Stroke="{Binding BorderBrush}"
+                                           Visibility="{Binding AreEdgeHandlesVisible, Converter={StaticResource BooleanToVisibility}}"
+                                           HorizontalAlignment="Left" VerticalAlignment="Center" Margin="-3,0,0,0" />
                             </Grid>
                         </Grid>
                     </ControlTemplate>
@@ -210,6 +214,10 @@
                             <TextBlock x:Name="LayoutsGroupTitle" Text="Layouts" />
                         </GroupBox.Header>
                         <StackPanel>
+                            <TextBlock>
+                                <Run Text="Loaded layout: " FontWeight="SemiBold" />
+                                <Run Text="{Binding LoadedLayout, Mode=OneWay}" />
+                            </TextBlock>
                             <ComboBox ItemsSource="{Binding AvailableSavedLayouts}"
                                       SelectedItem="{Binding SelectedSavedLayout}"
                                       MinWidth="220" />
@@ -218,12 +226,34 @@
                                 <Button Margin="7,0,0,0" Padding="12,4"
                                         Command="{Binding DeleteLayoutCommand}" Content="Delete" />
                             </StackPanel>
-                            <TextBox Margin="0,10,0,0" Padding="5"
+                            <TextBlock Margin="0,10,0,2" Text="Editable new name" />
+                            <TextBox Padding="5"
                                      Text="{Binding LayoutName, UpdateSourceTrigger=PropertyChanged}" />
-                            <CheckBox Margin="0,6,0,0" IsChecked="{Binding OverwriteLayout}"
-                                      Content="Explicitly overwrite existing name" />
-                            <Button Margin="0,7,0,0" Padding="12,5"
-                                    Command="{Binding SaveLayoutCommand}" Content="Save As" />
+                            <TextBlock Margin="0,5,0,0">
+                                <Run Text="Unsaved changes: " FontWeight="SemiBold" />
+                                <Run Text="{Binding HasUnsavedChanges, Mode=OneWay}" />
+                            </TextBlock>
+                            <WrapPanel Margin="0,7,0,0">
+                                <Button Padding="12,5" Command="{Binding SaveLayoutCommand}" Content="Save" />
+                                <Button Margin="7,0,0,0" Padding="12,5"
+                                        Command="{Binding SaveLayoutAsCommand}" Content="Save As" />
+                                <Button Margin="7,0,0,0" Padding="12,5"
+                                        Command="{Binding ResetToSavedCommand}" Content="Reset to Saved" />
+                            </WrapPanel>
+                            <Border Margin="0,8,0,0" Padding="8" BorderBrush="#FFD97706"
+                                    BorderThickness="1"
+                                    Visibility="{Binding IsOverwriteConfirmationVisible, Converter={StaticResource BooleanToVisibility}}">
+                                <StackPanel>
+                                    <TextBlock Foreground="#FF92400E" TextWrapping="Wrap"
+                                               Text="{Binding OverwriteWarning}" />
+                                    <WrapPanel Margin="0,6,0,0">
+                                        <Button Padding="10,4" Command="{Binding ConfirmOverwriteCommand}"
+                                                Content="Confirm Overwrite" />
+                                        <Button Margin="6,0,0,0" Padding="10,4"
+                                                Command="{Binding CancelOverwriteCommand}" Content="Cancel" />
+                                    </WrapPanel>
+                                </StackPanel>
+                            </Border>
                             <TextBlock Margin="0,6,0,0" TextWrapping="Wrap"
                                        Text="{Binding LayoutValidationMessage}" />
                         </StackPanel>
@@ -563,7 +593,107 @@
                 <TextBlock Margin="0,4,0,0" Foreground="DimGray"
                            TextWrapping="Wrap" Text="{Binding DiagnosticMessage}" />
                 <TextBlock Margin="0,4,0,0" Foreground="DimGray"
-                           Text="Tip: choose Edit Clock/Minimap, drag to create, drag inside to move, and use the eight visible handles to resize. Escape cancels; Delete clears." />
+                           Text="Tip: Edit opens the frozen precision view. Arrow keys move 1 px (Shift: 10 px); Alt+Arrow resizes 1 px (Shift+Alt: 10 px). MINIMAP resize keeps its top-left anchor and stays square." />
             </StackPanel>
+
+            <Border Grid.RowSpan="5" Panel.ZIndex="{Binding PrecisionEditorZIndex}" Margin="35"
+                    Padding="14" Background="#FFF9FAFB" BorderBrush="#FF374151"
+                    BorderThickness="2"
+                    IsHitTestVisible="{Binding IsPrecisionEditing}"
+                    Visibility="{Binding IsPrecisionEditing, Converter={StaticResource BooleanToVisibility}}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <DockPanel Margin="0,0,0,10">
+                        <TextBlock FontSize="20" FontWeight="SemiBold"
+                                   Text="{Binding PrecisionEditorTitle}" />
+                        <TextBlock DockPanel.Dock="Right" HorizontalAlignment="Right">
+                            <Run Text="Frozen source · Zoom " />
+                            <Run Text="{Binding PrecisionZoom, Mode=OneWay}" FontWeight="Bold" />
+                        </TextBlock>
+                    </DockPanel>
+                    <Border Grid.Row="1" Background="#FF111827" BorderBrush="#FF6B7280"
+                            BorderThickness="1" Padding="8">
+                        <ScrollViewer HorizontalScrollBarVisibility="Auto"
+                                      VerticalScrollBarVisibility="Auto"
+                                      CanContentScroll="False">
+                            <Grid Width="{Binding PrecisionContextWidth}"
+                                  Height="{Binding PrecisionContextHeight}"
+                                  RenderOptions.BitmapScalingMode="NearestNeighbor">
+                                <Image Source="{Binding PrecisionFrozenImage}" Stretch="Fill"
+                                       SnapsToDevicePixels="True" />
+                                <Canvas Background="Transparent"
+                                        MouseLeftButtonDown="OnPrecisionMouseDown"
+                                        MouseMove="OnPrecisionMouseMove"
+                                        MouseLeftButtonUp="OnPrecisionMouseUp">
+                                    <Border Canvas.Left="{Binding PrecisionOverlayLeft}"
+                                            Canvas.Top="{Binding PrecisionOverlayTop}"
+                                            Width="{Binding PrecisionOverlayWidth}"
+                                            Height="{Binding PrecisionOverlayHeight}"
+                                            BorderBrush="{Binding PrecisionBorderBrush}"
+                                            BorderThickness="1"
+                                            Background="#10000000">
+                                        <Rectangle Width="3" Height="3" Fill="White"
+                                                   Stroke="{Binding PrecisionBorderBrush}"
+                                                   HorizontalAlignment="Right"
+                                                   VerticalAlignment="Bottom"
+                                                   Margin="0,0,-2,-2" />
+                                    </Border>
+                                </Canvas>
+                            </Grid>
+                        </ScrollViewer>
+                    </Border>
+                    <Grid Grid.Row="2" Margin="0,12,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <WrapPanel>
+                                <TextBlock VerticalAlignment="Center" Text="X" />
+                                <TextBox Width="64" Margin="4,0,10,0" Padding="4"
+                                         Text="{Binding PixelX, UpdateSourceTrigger=LostFocus}" />
+                                <TextBlock VerticalAlignment="Center" Text="Y" />
+                                <TextBox Width="64" Margin="4,0,10,0" Padding="4"
+                                         Text="{Binding PixelY, UpdateSourceTrigger=LostFocus}" />
+                                <StackPanel Orientation="Horizontal"
+                                            Visibility="{Binding IsClockPrecisionEdit, Converter={StaticResource BooleanToVisibility}}">
+                                    <TextBlock VerticalAlignment="Center" Text="Width" />
+                                    <TextBox Width="64" Margin="4,0,10,0" Padding="4"
+                                             Text="{Binding PixelWidth, UpdateSourceTrigger=LostFocus}" />
+                                    <TextBlock VerticalAlignment="Center" Text="Height" />
+                                    <TextBox Width="64" Margin="4,0,10,0" Padding="4"
+                                             Text="{Binding PixelHeight, UpdateSourceTrigger=LostFocus}" />
+                                    <TextBlock VerticalAlignment="Center" Text="Ratio" />
+                                    <TextBlock Margin="4,0,0,0" VerticalAlignment="Center"
+                                               FontFamily="Consolas" Text="{Binding PixelRatio}" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal"
+                                            Visibility="{Binding IsMinimapPrecisionEdit, Converter={StaticResource BooleanToVisibility}}">
+                                    <TextBlock VerticalAlignment="Center" Text="Size" />
+                                    <TextBox Width="64" Margin="4,0,0,0" Padding="4"
+                                             Text="{Binding PixelSize, UpdateSourceTrigger=LostFocus}" />
+                                </StackPanel>
+                            </WrapPanel>
+                            <TextBlock Margin="0,6,0,0" Text="{Binding PixelGeometryStatus}" />
+                            <TextBlock Foreground="#FFB91C1C" TextWrapping="Wrap"
+                                       Text="{Binding PixelValidationMessage}" />
+                            <TextBlock Margin="0,5,0,0" Foreground="DimGray"
+                                       Text="Move: Arrow 1 px / Shift+Arrow 10 px. Resize: Alt+Arrow 1 px / Shift+Alt+Arrow 10 px. Drag inside to move; drag the lower-right marker to resize." />
+                        </StackPanel>
+                        <WrapPanel Grid.Column="1" Margin="14,0,0,0" VerticalAlignment="Bottom">
+                            <Button Padding="12,5" Command="{Binding UndoCurrentEditCommand}"
+                                    Content="Undo Current Edit" />
+                            <Button Margin="7,0,0,0" Padding="12,5"
+                                    Command="{Binding CancelRegionEditCommand}" Content="Cancel" />
+                            <Button Margin="7,0,0,0" Padding="12,5"
+                                    Command="{Binding ApplyRegionEditCommand}" Content="Apply" />
+                        </WrapPanel>
+                    </Grid>
+                </Grid>
+            </Border>
     </Grid>
 </Window>

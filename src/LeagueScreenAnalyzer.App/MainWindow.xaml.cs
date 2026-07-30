@@ -1,4 +1,5 @@
 using System.Windows;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using LeagueScreenAnalyzer.App.Services;
 using LeagueScreenAnalyzer.App.ViewModels;
@@ -78,6 +79,56 @@ public partial class MainWindow : Window
             _viewModel.DeleteSelectedRegion();
             e.Handled = true;
         }
+        else if (_viewModel.IsPrecisionEditing &&
+                 Keyboard.FocusedElement is not TextBoxBase &&
+                 e.Key is Key.Left or Key.Right or Key.Up or Key.Down)
+        {
+            int amount = Keyboard.Modifiers.HasFlag(ModifierKeys.Shift) ? 10 : 1;
+            int dx = e.Key == Key.Left ? -amount : e.Key == Key.Right ? amount : 0;
+            int dy = e.Key == Key.Up ? -amount : e.Key == Key.Down ? amount : 0;
+            bool resize = Keyboard.Modifiers.HasFlag(ModifierKeys.Alt);
+            e.Handled = _viewModel.NudgePrecisionRegion(dx, dy, resize);
+        }
+    }
+
+    private void OnPrecisionMouseDown(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is not System.Windows.Controls.Canvas canvas)
+        {
+            return;
+        }
+
+        Point point = e.GetPosition(canvas);
+        if (_viewModel.PrecisionPointerDown(point.X, point.Y))
+        {
+            canvas.CaptureMouse();
+            canvas.Focus();
+            e.Handled = true;
+        }
+    }
+
+    private void OnPrecisionMouseMove(object sender, MouseEventArgs e)
+    {
+        if (sender is not System.Windows.Controls.Canvas canvas || !canvas.IsMouseCaptured)
+        {
+            return;
+        }
+
+        Point point = e.GetPosition(canvas);
+        _viewModel.PrecisionPointerMove(point.X, point.Y);
+        e.Handled = true;
+    }
+
+    private void OnPrecisionMouseUp(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is not System.Windows.Controls.Canvas canvas || !canvas.IsMouseCaptured)
+        {
+            return;
+        }
+
+        _viewModel.PrecisionPointerUp();
+        canvas.ReleaseMouseCapture();
+        e.Handled = true;
     }
 
     protected override async void OnClosed(EventArgs e)

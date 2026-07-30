@@ -51,14 +51,14 @@ public sealed class ClockProfileCatalogTests
     public void DuplicateGeneratedIds_AreRejectedWithoutReplacement()
     {
         using TemporaryDirectory root = new();
-        WriteProfile(root.Path, "first", "duplicate", includeImage: true);
-        WriteProfile(root.Path, "second", "duplicate", includeImage: true);
+        WriteProfile(root.Path, "first", "duplicate-v1", includeImage: true);
+        WriteProfile(root.Path, "second", "duplicate-v1", includeImage: true);
 
         ClockProfileCatalog catalog = Discover(root.Path);
 
-        Assert.False(catalog.TryGet("duplicate", out _));
+        Assert.False(catalog.TryGet("duplicate-v1", out _));
         Assert.Contains(catalog.Errors, error => error.Message.Contains(
-            "Duplicate clock profile ID 'duplicate'", StringComparison.Ordinal));
+            "Duplicate clock profile ID 'duplicate-v1'", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -83,21 +83,21 @@ public sealed class ClockProfileCatalogTests
     public void MissingTemplateAsset_IsRejectedClearly()
     {
         using TemporaryDirectory root = new();
-        WriteProfile(root.Path, "missing", "missing-assets", includeImage: false);
+        WriteProfile(root.Path, "missing", "league-replay-v4", includeImage: false, version: 4);
 
         ClockProfileCatalog catalog = Discover(root.Path);
 
         Assert.Contains(catalog.Errors, error =>
             error.Message.Contains("Template image is missing", StringComparison.Ordinal));
-        Assert.False(catalog.TryGet("missing-assets", out _));
+        Assert.False(catalog.TryGet("league-replay-v4", out _));
     }
 
     [Fact]
     public void Profiles_AreSortedByStableId_AndLabelsAreDistinctAndExposeIds()
     {
         using TemporaryDirectory root = new();
-        WriteProfile(root.Path, "z", "z-profile", includeImage: true);
-        WriteProfile(root.Path, "a", "a-profile", includeImage: true);
+        WriteProfile(root.Path, "z", "league-replay-v5", includeImage: true, version: 5);
+        WriteProfile(root.Path, "a", "league-replay-v4", includeImage: true, version: 4);
 
         ClockProfileCatalog catalog = Discover(root.Path);
         string[] ids = catalog.Profiles.Select(profile => profile.Id).ToArray();
@@ -117,6 +117,47 @@ public sealed class ClockProfileCatalogTests
             Assert.Throws<KeyNotFoundException>(() => catalog.Get("league-replay-v999"));
 
         Assert.Contains("unavailable", exception.Message);
+    }
+
+    [Fact]
+    public void DefaultProfile_IsHighestNumericVersionInCompatibleFamily()
+    {
+        using TemporaryDirectory root = new();
+        WriteProfile(root.Path, "v9", "league-replay-v9", includeImage: true, version: 9);
+        WriteProfile(root.Path, "v10", "league-replay-v10", includeImage: true, version: 10);
+        WriteProfile(root.Path, "v2-copy", "other-family-v2", includeImage: true, version: 2);
+
+        ClockProfileCatalog catalog = Discover(root.Path);
+
+        Assert.Equal("league-replay-v10", catalog.DefaultProfile.Id);
+        Assert.Equal(
+            ["league-replay-v10", "league-replay-v9", "league-replay-v2"],
+            catalog.Profiles
+                .Where(profile => profile.Family == "league-replay")
+                .OrderByDescending(profile => profile.Version)
+                .Take(3)
+                .Select(profile => profile.Id)
+                .ToArray());
+        Assert.Contains(catalog.Errors, error =>
+            error.Message.Contains("family 'other-family' is incompatible", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void MalformedOrMismatchedNumericVersion_IsRejectedClearly()
+    {
+        using TemporaryDirectory root = new();
+        WriteProfile(
+            root.Path,
+            "mismatch",
+            "league-replay-v10",
+            includeImage: true,
+            version: 9);
+
+        ClockProfileCatalog catalog = Discover(root.Path);
+
+        Assert.False(catalog.TryGet("league-replay-v10", out _));
+        Assert.Contains(catalog.Errors, error =>
+            error.Message.Contains("declares version 9", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -188,7 +229,8 @@ public sealed class ClockProfileCatalogTests
         string root,
         string directoryName,
         string profileId,
-        bool includeImage)
+        bool includeImage,
+        int version = 1)
     {
         string directory = Path.Combine(root, directoryName);
         Directory.CreateDirectory(directory);
@@ -205,7 +247,7 @@ public sealed class ClockProfileCatalogTests
         ClockTemplateManifest manifest = new(
             1,
             profileId,
-            1,
+            version,
             BuiltInClockProfiles.LeagueReplayV1Id,
             1,
             1,

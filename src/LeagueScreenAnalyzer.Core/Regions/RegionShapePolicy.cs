@@ -46,6 +46,11 @@ public interface IRegionShapePolicy
         NormalizedRegion region,
         RegionSourceSize sourceSize);
 
+    RegionGeometryValidation ValidateStrict(
+        RegionType regionType,
+        NormalizedRegion region,
+        RegionSourceSize sourceSize);
+
     LegacyRegionNormalization NormalizeLegacy(
         RegionType regionType,
         NormalizedRegion region,
@@ -55,7 +60,7 @@ public interface IRegionShapePolicy
 public sealed class SemanticRegionShapePolicy(
     double minimumClockWidthToHeightRatio = 2.0,
     double minimapRoundingTolerance = 0.025,
-    double minimapValidationTolerance = 0.01) : IRegionShapePolicy
+    int pixelRoundingTolerance = 1) : IRegionShapePolicy
 {
     public double MinimumClockWidthToHeightRatio { get; } =
         ValidatePositive(minimumClockWidthToHeightRatio, nameof(minimumClockWidthToHeightRatio));
@@ -63,26 +68,35 @@ public sealed class SemanticRegionShapePolicy(
     public double MinimapRoundingTolerance { get; } =
         ValidateNonNegative(minimapRoundingTolerance, nameof(minimapRoundingTolerance));
 
-    public double MinimapValidationTolerance { get; } =
-        ValidateNonNegative(minimapValidationTolerance, nameof(minimapValidationTolerance));
+    public int PixelRoundingTolerance { get; } = pixelRoundingTolerance is >= 0 and <= 1
+        ? pixelRoundingTolerance
+        : throw new ArgumentOutOfRangeException(nameof(pixelRoundingTolerance));
 
     public NormalizedRegion ConstrainCreate(
         RegionType regionType,
         NormalizedRegion proposed,
-        RegionSourceSize sourceSize) =>
-        regionType == RegionType.Minimap
+        RegionSourceSize sourceSize)
+    {
+        RegionSourceSize source = sourceSize.Validate();
+        NormalizedRegion constrained = regionType == RegionType.Minimap
             ? SquareFromTopLeft(proposed, sourceSize.Validate())
             : ConstrainClock(proposed, sourceSize.Validate(), ResizeHandle.BottomRight);
+        return SnapStrict(regionType, constrained, ResizeHandle.BottomRight, source);
+    }
 
     public NormalizedRegion ConstrainResize(
         RegionType regionType,
         NormalizedRegion original,
         NormalizedRegion proposed,
         ResizeHandle handle,
-        RegionSourceSize sourceSize) =>
-        regionType == RegionType.Minimap
+        RegionSourceSize sourceSize)
+    {
+        RegionSourceSize source = sourceSize.Validate();
+        NormalizedRegion constrained = regionType == RegionType.Minimap
             ? ConstrainSquareResize(original, proposed, handle, sourceSize.Validate())
             : ConstrainClock(proposed, sourceSize.Validate(), handle);
+        return SnapStrict(regionType, constrained, handle, source);
+    }
 
     public RegionGeometryValidation Validate(
         RegionType regionType,
@@ -90,11 +104,29 @@ public sealed class SemanticRegionShapePolicy(
         RegionSourceSize sourceSize)
     {
         RegionSourceSize source = sourceSize.Validate();
-        double ratio = PixelAspectRatio(region, source);
+        if (source.Width <= 1 || source.Height <= 1)
+        {
+            double continuousRatio =
+                (region.Width * source.Width) / (region.Height * source.Height);
+            bool continuousValid = regionType == RegionType.Minimap
+                ? Math.Abs(continuousRatio - 1) <= MinimapRoundingTolerance
+                : continuousRatio >= MinimumClockWidthToHeightRatio;
+            return continuousValid
+                ? new RegionGeometryValidation(true, null, continuousRatio)
+                : new RegionGeometryValidation(
+                    false,
+                    regionType == RegionType.Minimap
+                        ? $"MINIMAP must be square in source pixels (current ratio {continuousRatio:0.###}:1)."
+                        : $"CLOCK must be a wide horizontal region with width-to-height ratio of at least {MinimumClockWidthToHeightRatio:0.##}:1 (current ratio {continuousRatio:0.###}:1).",
+                    continuousRatio);
+        }
+
+        PixelRegion pixels = PixelRegionGeometry.ToPixels(region, source);
+        double ratio = (double)pixels.Width / pixels.Height;
         if (regionType == RegionType.Minimap)
         {
-            double deviation = Math.Abs(ratio - 1);
-            return deviation <= MinimapValidationTolerance
+            int deviation = Math.Abs(pixels.Width - pixels.Height);
+            return deviation <= PixelRoundingTolerance
                 ? new RegionGeometryValidation(true, null, ratio)
                 : new RegionGeometryValidation(
                     false,
@@ -102,11 +134,50 @@ public sealed class SemanticRegionShapePolicy(
                     ratio);
         }
 
-        return ratio >= MinimumClockWidthToHeightRatio
+        double deficit = (pixels.Height * MinimumClockWidthToHeightRatio) - pixels.Width;
+        return deficit <= PixelRoundingTolerance
             ? new RegionGeometryValidation(true, null, ratio)
             : new RegionGeometryValidation(
                 false,
                 $"CLOCK must be a wide horizontal region with width-to-height ratio of at least {MinimumClockWidthToHeightRatio:0.##}:1 (current ratio {ratio:0.###}:1).",
+                ratio);
+    }
+
+    public RegionGeometryValidation ValidateStrict(
+        RegionType regionType,
+        NormalizedRegion region,
+        RegionSourceSize sourceSize)
+    {
+        RegionSourceSize source = sourceSize.Validate();
+        if (source.Width <= 1 || source.Height <= 1)
+        {
+            double continuousRatio =
+                (region.Width * source.Width) / (region.Height * source.Height);
+            bool continuousValid = regionType == RegionType.Minimap
+                ? Math.Abs(continuousRatio - 1) <= double.Epsilon
+                : continuousRatio >= MinimumClockWidthToHeightRatio;
+            return continuousValid
+                ? new RegionGeometryValidation(true, null, continuousRatio)
+                : new RegionGeometryValidation(
+                    false,
+                    regionType == RegionType.Minimap
+                        ? "MINIMAP must be square in source pixels."
+                        : $"CLOCK width must be at least {MinimumClockWidthToHeightRatio:0.##} times height.",
+                    continuousRatio);
+        }
+
+        PixelRegion pixels = PixelRegionGeometry.ToPixels(region, source);
+        double ratio = (double)pixels.Width / pixels.Height;
+        bool valid = regionType == RegionType.Minimap
+            ? pixels.Width == pixels.Height
+            : pixels.Width >= Math.Ceiling(pixels.Height * MinimumClockWidthToHeightRatio);
+        return valid
+            ? new RegionGeometryValidation(true, null, ratio)
+            : new RegionGeometryValidation(
+                false,
+                regionType == RegionType.Minimap
+                    ? $"MINIMAP must be square in source pixels (currently {pixels.Width} × {pixels.Height})."
+                    : $"CLOCK width must be at least {MinimumClockWidthToHeightRatio:0.##} times height (currently {pixels.Width} × {pixels.Height}, {ratio:0.###}:1).",
                 ratio);
     }
 
@@ -115,21 +186,44 @@ public sealed class SemanticRegionShapePolicy(
         NormalizedRegion region,
         RegionSourceSize sourceSize)
     {
-        if (regionType != RegionType.Minimap)
+        if (regionType == RegionType.Clock)
         {
             RegionGeometryValidation validation = Validate(regionType, region, sourceSize);
-            return new LegacyRegionNormalization(region, false, validation.Error);
+            if (!validation.IsValid)
+            {
+                return new LegacyRegionNormalization(region, false, validation.Error);
+            }
+
+            RegionGeometryValidation strict = ValidateStrict(regionType, region, sourceSize);
+            if (strict.IsValid)
+            {
+                return new LegacyRegionNormalization(region, false, null);
+            }
+
+            PixelRegion pixels = PixelRegionGeometry.ToPixels(region, sourceSize);
+            int requiredWidth = (int)Math.Ceiling(pixels.Height * MinimumClockWidthToHeightRatio);
+            int sourceWidth = (int)Math.Round(sourceSize.Width);
+            int x = Math.Min(pixels.X, sourceWidth - requiredWidth);
+            NormalizedRegion normalizedClock = PixelRegionGeometry.FromPixels(
+                new PixelRegion(x, pixels.Y, requiredWidth, pixels.Height),
+                sourceSize);
+            return new LegacyRegionNormalization(
+                normalizedClock,
+                true,
+                $"Loaded CLOCK one-pixel rounding deviation ({pixels.Width} × {pixels.Height}) was normalized to {requiredWidth} × {pixels.Height}.");
         }
 
         RegionSourceSize source = sourceSize.Validate();
-        double ratio = PixelAspectRatio(region, source);
-        double deviation = Math.Abs(ratio - 1);
-        if (deviation <= MinimapValidationTolerance)
+        PixelRegion pixelRegion = PixelRegionGeometry.ToPixels(region, source);
+        double ratio = (double)pixelRegion.Width / pixelRegion.Height;
+        int pixelDeviation = Math.Abs(pixelRegion.Width - pixelRegion.Height);
+        if (pixelDeviation == 0)
         {
             return new LegacyRegionNormalization(region, false, null);
         }
 
-        if (deviation > MinimapRoundingTolerance)
+        if (pixelDeviation > PixelRoundingTolerance &&
+            Math.Abs(ratio - 1) > MinimapRoundingTolerance)
         {
             return new LegacyRegionNormalization(
                 region,
@@ -137,7 +231,7 @@ public sealed class SemanticRegionShapePolicy(
                 $"Loaded MINIMAP is materially non-square ({ratio:0.###}:1); it was retained for manual correction.");
         }
 
-        double sidePixels = ((region.Width * source.Width) + (region.Height * source.Height)) / 2;
+        double sidePixels = Math.Round((pixelRegion.Width + pixelRegion.Height) / 2d);
         NormalizedRegion normalized = SquareCentered(
             region.X + (region.Width / 2),
             region.Y + (region.Height / 2),
@@ -150,7 +244,8 @@ public sealed class SemanticRegionShapePolicy(
     }
 
     public static double PixelAspectRatio(NormalizedRegion region, RegionSourceSize sourceSize) =>
-        (region.Width * sourceSize.Width) / (region.Height * sourceSize.Height);
+        (double)PixelRegionGeometry.ToPixels(region, sourceSize).Width /
+        PixelRegionGeometry.ToPixels(region, sourceSize).Height;
 
     private NormalizedRegion ConstrainSquareResize(
         NormalizedRegion original,
@@ -266,6 +361,70 @@ public sealed class SemanticRegionShapePolicy(
             Math.Clamp(centerY - (height / 2), 0, 1 - height),
             width,
             height);
+    }
+
+    private NormalizedRegion SnapStrict(
+        RegionType type,
+        NormalizedRegion region,
+        ResizeHandle handle,
+        RegionSourceSize source)
+    {
+        if (source.Width <= 1 || source.Height <= 1)
+        {
+            return region;
+        }
+
+        PixelRegion pixels = PixelRegionGeometry.ToPixels(region, source);
+        int sourceWidth = (int)Math.Round(source.Width);
+        int sourceHeight = (int)Math.Round(source.Height);
+        if (type == RegionType.Minimap)
+        {
+            int size = Math.Min(
+                Math.Max(pixels.Width, pixels.Height),
+                Math.Min(sourceWidth, sourceHeight));
+            int x = handle is ResizeHandle.TopLeft or ResizeHandle.Left or ResizeHandle.BottomLeft
+                ? Math.Clamp(pixels.Right - size, 0, sourceWidth - size)
+                : Math.Clamp(pixels.X, 0, sourceWidth - size);
+            int y = handle is ResizeHandle.TopLeft or ResizeHandle.Top or ResizeHandle.TopRight
+                ? Math.Clamp(pixels.Bottom - size, 0, sourceHeight - size)
+                : Math.Clamp(pixels.Y, 0, sourceHeight - size);
+            return PixelRegionGeometry.FromPixels(
+                new PixelRegion(x, y, size, size),
+                source);
+        }
+
+        int requiredWidth = (int)Math.Ceiling(pixels.Height * MinimumClockWidthToHeightRatio);
+        if (pixels.Width >= requiredWidth)
+        {
+            return PixelRegionGeometry.FromPixels(pixels, source);
+        }
+
+        int xPosition = pixels.X;
+        int width = requiredWidth;
+        if (handle is ResizeHandle.TopLeft or ResizeHandle.Left or ResizeHandle.BottomLeft)
+        {
+            xPosition = pixels.Right - width;
+        }
+
+        if (xPosition < 0 || xPosition + width > sourceWidth)
+        {
+            width = pixels.Width;
+            int height = Math.Max(1, (int)Math.Floor(width / MinimumClockWidthToHeightRatio));
+            int yPosition = handle is ResizeHandle.TopLeft or ResizeHandle.Top or ResizeHandle.TopRight
+                ? pixels.Bottom - height
+                : pixels.Y;
+            return PixelRegionGeometry.FromPixels(
+                new PixelRegion(
+                    Math.Clamp(pixels.X, 0, sourceWidth - width),
+                    Math.Clamp(yPosition, 0, sourceHeight - height),
+                    width,
+                    height),
+                source);
+        }
+
+        return PixelRegionGeometry.FromPixels(
+            new PixelRegion(xPosition, pixels.Y, width, pixels.Height),
+            source);
     }
 
     private static double ValidatePositive(double value, string name) =>

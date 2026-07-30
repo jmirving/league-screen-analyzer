@@ -14,6 +14,7 @@ public enum ClockProfileProvenance
 public sealed record ClockProfileCatalogEntry(
     string Id,
     string DisplayName,
+    string Family,
     int Version,
     ClockProfileProvenance Provenance,
     int TemplateCount,
@@ -30,18 +31,23 @@ public sealed class ClockProfileCatalog
     public const string OverrideEnvironmentVariable = "LEAGUE_SCREEN_ANALYZER_CLOCK_PROFILES";
 
     private readonly IReadOnlyDictionary<string, ClockProfileCatalogEntry> _byId;
+    private readonly string _defaultFamily;
 
     private ClockProfileCatalog(
         IReadOnlyList<ClockProfileCatalogEntry> profiles,
-        IReadOnlyList<ClockProfileCatalogError> errors)
+        IReadOnlyList<ClockProfileCatalogError> errors,
+        string defaultFamily)
     {
         Profiles = profiles;
         Errors = errors;
+        _defaultFamily = defaultFamily;
         _byId = profiles.ToDictionary(profile => profile.Id, StringComparer.Ordinal);
     }
 
     public IReadOnlyList<ClockProfileCatalogEntry> Profiles { get; }
     public IReadOnlyList<ClockProfileCatalogError> Errors { get; }
+    public ClockProfileCatalogEntry DefaultProfile =>
+        GetHighestCompatible(_defaultFamily);
 
     public ClockProfileCatalogEntry Get(string id)
     {
@@ -58,6 +64,22 @@ public sealed class ClockProfileCatalog
 
     public bool TryGet(string id, out ClockProfileCatalogEntry? entry) =>
         _byId.TryGetValue(id, out entry);
+
+    public ClockProfileCatalogEntry GetHighestCompatible(string family) =>
+        ProfileVersionSelection.HighestCompatible(
+            Profiles,
+            family,
+            profile => profile.Family,
+            profile => profile.Version);
+
+    public ClockProfileCatalogEntry? SuggestReplacement(string unavailableId) =>
+        ProfileVersionKey.TryParseId(unavailableId, out ProfileVersionKey key) &&
+        Profiles.Any(profile => string.Equals(
+            profile.Family,
+            key.Family,
+            StringComparison.Ordinal))
+            ? GetHighestCompatible(key.Family)
+            : null;
 
     public static ClockProfileCatalog CreateDefault()
     {
@@ -99,15 +121,22 @@ public sealed class ClockProfileCatalog
         Dictionary<string, ClockProfileCatalogEntry> profiles = BuiltInClockProfiles.All
             .ToDictionary(
                 profile => profile.Id,
-                profile => new ClockProfileCatalogEntry(
-                    profile.Id,
-                    profile.Name,
-                    profile.Version,
-                    ClockProfileProvenance.BuiltIn,
-                    0,
-                    null,
-                    profile),
+                profile =>
+                {
+                    ProfileVersionKey key =
+                        ProfileVersionKey.Parse(profile.Id, profile.Version);
+                    return new ClockProfileCatalogEntry(
+                        profile.Id,
+                        profile.Name,
+                        key.Family,
+                        profile.Version,
+                        ClockProfileProvenance.BuiltIn,
+                        0,
+                        null,
+                        profile);
+                },
                 StringComparer.Ordinal);
+        string defaultFamily = profiles.Values.First().Family;
         HashSet<string> conflictedIds = new(StringComparer.Ordinal);
         HashSet<string> visitedDirectories = new(StringComparer.OrdinalIgnoreCase);
         List<ClockProfileCatalogError> errors = [];
@@ -134,8 +163,13 @@ public sealed class ClockProfileCatalog
 
                 try
                 {
+                    ClockTemplateManifest manifest =
+                        ClockTemplateProfileLoader.LoadManifest(fullDirectory);
+                    _ = ProfileVersionKey.Parse(
+                        manifest.ProfileId,
+                        manifest.ProfileVersion);
                     manifests.Add((
-                        ClockTemplateProfileLoader.LoadManifest(fullDirectory),
+                        manifest,
                         fullDirectory,
                         root.Provenance));
                 }
@@ -167,7 +201,7 @@ public sealed class ClockProfileCatalog
                         Path.Combine(duplicateDirectory, "manifest.json");
                     errors.Add(new ClockProfileCatalogError(
                         duplicateManifestPath,
-                        $"Duplicate clock profile ID '{group.Key}' was rejected; no profile may replace another."));
+                        $"Duplicate clock profile ID '{group.Key}' and family/version entry was rejected; no profile may replace another."));
                 }
                 continue;
             }
@@ -219,6 +253,17 @@ public sealed class ClockProfileCatalog
                 }
 
                 string manifestPath = Path.Combine(directory, "manifest.json");
+                ProfileVersionKey key =
+                    ProfileVersionKey.Parse(manifest.ProfileId, manifest.ProfileVersion);
+                if (!string.Equals(key.Family, baseEntry.Family, StringComparison.Ordinal))
+                {
+                    errors.Add(new ClockProfileCatalogError(
+                        manifestPath,
+                        $"Rejected clock profile '{manifest.ProfileId}': family '{key.Family}' is incompatible with base profile family '{baseEntry.Family}'."));
+                    pending.Remove((manifest, directory, provenance));
+                    resolved++;
+                    continue;
+                }
                 string displayName = DisplayName(
                     manifest.ProfileId,
                     manifest.ProfileVersion,
@@ -232,6 +277,7 @@ public sealed class ClockProfileCatalog
                 profiles.Add(manifest.ProfileId, new ClockProfileCatalogEntry(
                     profile.Id,
                     displayName,
+                    key.Family,
                     profile.Version,
                     provenance,
                     manifest.Templates.Count,
@@ -261,16 +307,31 @@ public sealed class ClockProfileCatalog
             pending.Clear();
         }
 
+        foreach (IGrouping<(string Family, int Version), ClockProfileCatalogEntry> duplicate
+                 in ProfileVersionSelection.DuplicateFamilyVersions(
+                     profiles.Values,
+                     profile => profile.Family,
+                     profile => profile.Version))
+        {
+            foreach (ClockProfileCatalogEntry entry in duplicate)
+            {
+                profiles.Remove(entry.Id);
+                errors.Add(new ClockProfileCatalogError(
+                    entry.SourceManifestPath,
+                    $"Duplicate clock profile family/version '{duplicate.Key.Family}' v{duplicate.Key.Version} was rejected for profile '{entry.Id}'."));
+            }
+        }
+
         return new ClockProfileCatalog(
             profiles.Values.OrderBy(profile => profile.Id, StringComparer.Ordinal).ToArray(),
-            errors.OrderBy(error => error.ManifestPath, StringComparer.Ordinal).ToArray());
+            errors.OrderBy(error => error.ManifestPath, StringComparer.Ordinal).ToArray(),
+            defaultFamily);
     }
 
     private static string DisplayName(string id, int version, string baseName) => id switch
     {
         BuiltInClockProfiles.LeagueReplayV1Id => "League Replay HUD — v1 synthetic",
         BuiltInClockProfiles.LeagueReplayV2Id => "League Replay HUD — v2 real calibrated",
-        "league-replay-v3" => "League Replay HUD — v3 expanded real calibrated",
         _ => $"{baseName} — v{version} generated"
     };
 

@@ -106,6 +106,87 @@ public sealed class MinimapProfileCatalogTests
         Assert.Equal("league-replay-minimap-v1", result.ProfileId);
     }
 
+    [Fact]
+    public async Task NewerCompatibleProfile_ChangesFreshDefaultWithoutComparingOtherFamilies()
+    {
+        using TemporaryDirectory temporary = new();
+        await WriteProfileAsync(
+            temporary.Path,
+            "compatible-v2",
+            "league-replay-minimap-v2",
+            2);
+        await WriteProfileAsync(
+            temporary.Path,
+            "unrelated-v10",
+            "spectator-minimap-v10",
+            10);
+
+        MinimapProfileCatalog catalog = MinimapProfileCatalog.Discover(
+            [new MinimapProfileSearchRoot(
+                temporary.Path,
+                MinimapProfileProvenance.UserInstalled)]);
+
+        Assert.Equal("league-replay-minimap-v2", catalog.DefaultProfile.Id);
+        Assert.Equal(
+            "spectator-minimap-v10",
+            catalog.GetHighestCompatible("spectator-minimap").Id);
+    }
+
+    [Fact]
+    public async Task MalformedVersionMetadata_IsRejectedClearly()
+    {
+        using TemporaryDirectory temporary = new();
+        await WriteProfileAsync(
+            temporary.Path,
+            "mismatch",
+            "league-replay-minimap-v10",
+            9);
+
+        MinimapProfileCatalog catalog = MinimapProfileCatalog.Discover(
+            [new MinimapProfileSearchRoot(
+                temporary.Path,
+                MinimapProfileProvenance.UserInstalled)]);
+
+        Assert.False(catalog.TryGet("league-replay-minimap-v10", out _));
+        Assert.Contains(catalog.Errors, error =>
+            error.Message.Contains("declares version 9", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task DuplicateFamilyVersionEntries_AreRejectedClearly()
+    {
+        using TemporaryDirectory temporary = new();
+        await WriteProfileAsync(temporary.Path, "first", "duplicate-v1", 1);
+        await WriteProfileAsync(temporary.Path, "second", "duplicate-v1", 1);
+
+        MinimapProfileCatalog catalog = MinimapProfileCatalog.Discover(
+            [new MinimapProfileSearchRoot(
+                temporary.Path,
+                MinimapProfileProvenance.UserInstalled)]);
+
+        Assert.False(catalog.TryGet("duplicate-v1", out _));
+        Assert.Contains(catalog.Errors, error =>
+            error.Message.Contains("family/version", StringComparison.Ordinal));
+    }
+
+    private static Task WriteProfileAsync(
+        string root,
+        string directoryName,
+        string id,
+        int version)
+    {
+        string directory = Path.Combine(root, directoryName);
+        Directory.CreateDirectory(directory);
+        return MinimapProfileSerializer.SaveAsync(
+            BuiltInMinimapProfiles.LeagueReplayMinimapV1 with
+            {
+                Id = id,
+                DisplayName = id,
+                Version = version
+            },
+            Path.Combine(directory, "profile.json"));
+    }
+
     private sealed class TemporaryDirectory : IDisposable
     {
         public TemporaryDirectory()

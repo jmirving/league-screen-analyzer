@@ -7,6 +7,7 @@ using LeagueScreenAnalyzer.App.Services;
 using LeagueScreenAnalyzer.App.ViewModels;
 using LeagueScreenAnalyzer.Capture.Live;
 using LeagueScreenAnalyzer.Core.Models;
+using LeagueScreenAnalyzer.Imaging;
 using LeagueScreenAnalyzer.Storage;
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -42,6 +43,95 @@ public sealed class MinimapProfileLifecycleTests
 
                 await controller.StopAsync();
                 Assert.True(viewModel.CanConfigureMinimap);
+            }
+            finally
+            {
+                await viewModel.DisposeAsync();
+            }
+        });
+
+    [Fact]
+    public void PersistedOlderClockSelection_IsPreservedAcrossCaptureAndCatalogRefresh() =>
+        RunOnStaAsync(async () =>
+        {
+            FakeSession session = new();
+            CaptureController controller = new(
+                new FakeSelector(CaptureSelectionResult.Selected(session)));
+            ClockProfileCatalog clockCatalog = ClockProfileCatalog.CreateDefault();
+            MinimapProfileCatalog minimapCatalog = MinimapProfileCatalog.CreateDefault();
+            MainWindowViewModel viewModel = new(
+                controller,
+                new FakeHandleProvider(),
+                Dispatcher.CurrentDispatcher,
+                NullLogger<MainWindowViewModel>.Instance,
+                layoutStore: new MemoryLayoutStore(),
+                clockProfileCatalog: clockCatalog,
+                minimapProfileCatalog: minimapCatalog);
+            try
+            {
+                Assert.Equal(clockCatalog.DefaultProfile.Id, viewModel.SelectedClockProfileId);
+                Assert.True(viewModel.RestorePersistedClockProfile(
+                    BuiltInClockProfiles.LeagueReplayV2Id,
+                    "older-layout"));
+                Assert.Equal(
+                    BuiltInClockProfiles.LeagueReplayV2Id,
+                    viewModel.SelectedClockProfileId);
+
+                await controller.SelectWindowAsync(0);
+                Assert.Equal(
+                    BuiltInClockProfiles.LeagueReplayV2Id,
+                    viewModel.ActiveClockProfileId);
+                viewModel.RefreshProfileCatalogs(
+                    ClockProfileCatalog.CreateDefault(),
+                    MinimapProfileCatalog.CreateDefault());
+                Assert.Equal(
+                    BuiltInClockProfiles.LeagueReplayV2Id,
+                    viewModel.ActiveClockProfileId);
+
+                await controller.StopAsync();
+                Assert.Equal(
+                    BuiltInClockProfiles.LeagueReplayV2Id,
+                    viewModel.SelectedClockProfileId);
+                Assert.Equal(
+                    BuiltInClockProfiles.LeagueReplayV2Id,
+                    viewModel.ActiveClockProfileId);
+            }
+            finally
+            {
+                await viewModel.DisposeAsync();
+            }
+        });
+
+    [Fact]
+    public void MissingPersistedSelection_WarnsSuggestsAndDoesNotFallbackSilently() =>
+        RunOnStaAsync(async () =>
+        {
+            CaptureController controller = new(
+                new FakeSelector(CaptureSelectionResult.Cancelled()));
+            MainWindowViewModel viewModel = new(
+                controller,
+                new FakeHandleProvider(),
+                Dispatcher.CurrentDispatcher,
+                NullLogger<MainWindowViewModel>.Instance,
+                layoutStore: new MemoryLayoutStore());
+            try
+            {
+                string original = viewModel.SelectedClockProfileId;
+
+                Assert.False(viewModel.RestorePersistedClockProfile(
+                    "league-replay-v999",
+                    "missing-layout"));
+
+                Assert.Equal(original, viewModel.SelectedClockProfileId);
+                Assert.Contains("unavailable", viewModel.ClockProfileWarning);
+                Assert.Contains("was not changed", viewModel.ClockProfileWarning);
+                Assert.Contains(
+                    $"Suggested compatible replacement: '{original}'",
+                    viewModel.ClockProfileWarning);
+
+                viewModel.SelectedClockProfileId = "league-replay-v998";
+                Assert.Equal(original, viewModel.SelectedClockProfileId);
+                Assert.Contains("Suggested compatible replacement", viewModel.ClockProfileWarning);
             }
             finally
             {

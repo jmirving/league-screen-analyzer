@@ -27,6 +27,8 @@ public sealed class RegionOverlayViewModel : INotifyPropertyChanged
 
     public Brush BorderBrush { get; }
 
+    public bool AreEdgeHandlesVisible => RegionType == RegionType.Clock;
+
     public double Left { get => _left; private set => Set(ref _left, value); }
 
     public double Top { get => _top; private set => Set(ref _top, value); }
