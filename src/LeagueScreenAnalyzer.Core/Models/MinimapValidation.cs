@@ -83,7 +83,8 @@ public sealed record MinimapValidationProfile(
     double MinimumCornerConsistency,
     double MinimumConfidence,
     string Provenance,
-    bool CalibratedForCanonicalRecording = false)
+    bool CalibratedForCanonicalRecording = false,
+    string? FamilyId = null)
 {
     public MinimapValidationProfile Validate()
     {

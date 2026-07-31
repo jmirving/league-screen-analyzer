@@ -32,7 +32,7 @@ public sealed class MinimapProfileLifecycleTests
             {
                 Assert.True(viewModel.CanConfigureMinimap);
                 Assert.Equal(
-                    "league-replay-minimap-v1",
+                    "league-replay-minimap-v2",
                     viewModel.ActiveMinimapProfileId);
 
                 await controller.SelectWindowAsync(0);
@@ -95,6 +95,51 @@ public sealed class MinimapProfileLifecycleTests
                 Assert.Equal(
                     BuiltInClockProfiles.LeagueReplayV2Id,
                     viewModel.ActiveClockProfileId);
+            }
+            finally
+            {
+                await viewModel.DisposeAsync();
+            }
+        });
+
+    [Fact]
+    public void FreshDefaultSelectsV2AndPersistedExplicitV1RemainsPreserved() =>
+        RunOnStaAsync(async () =>
+        {
+            MinimapProfileCatalog catalog = MinimapProfileCatalog.CreateDefault();
+            Assert.Equal("league-replay-minimap-v2", catalog.DefaultProfile.Id);
+            Assert.Empty(catalog.Errors);
+
+            CaptureController controller = new(
+                new FakeSelector(CaptureSelectionResult.Cancelled()));
+            MainWindowViewModel viewModel = new(
+                controller,
+                new FakeHandleProvider(),
+                Dispatcher.CurrentDispatcher,
+                NullLogger<MainWindowViewModel>.Instance,
+                layoutStore: new MemoryLayoutStore(),
+                minimapProfileCatalog: catalog);
+            try
+            {
+                Assert.Equal("league-replay-minimap-v2", viewModel.MinimapProfileId);
+                Assert.True(string.IsNullOrEmpty(viewModel.MinimapProfileWarning));
+                Assert.True(viewModel.RestorePersistedMinimapProfile(
+                    BuiltInMinimapProfiles.LeagueReplayMinimapV1Id,
+                    "persisted-v1-layout"));
+                Assert.Equal(
+                    BuiltInMinimapProfiles.LeagueReplayMinimapV1Id,
+                    viewModel.MinimapProfileId);
+
+                viewModel.RefreshProfileCatalogs(
+                    ClockProfileCatalog.CreateDefault(),
+                    MinimapProfileCatalog.CreateDefault());
+
+                Assert.Equal(
+                    BuiltInMinimapProfiles.LeagueReplayMinimapV1Id,
+                    viewModel.MinimapProfileId);
+                Assert.Equal(
+                    BuiltInMinimapProfiles.LeagueReplayMinimapV1Id,
+                    viewModel.ActiveMinimapProfileId);
             }
             finally
             {

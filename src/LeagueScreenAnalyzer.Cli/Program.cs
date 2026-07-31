@@ -24,7 +24,8 @@ public static class Program
                 var profile = await new MinimapCalibrationService().BuildProfileAsync(
                     Required(values, "--profile-id"),
                     Required(values, "--diagnostics"),
-                    Required(values, "--output-profile")).ConfigureAwait(false);
+                    Required(values, "--output-profile"),
+                    OptionalPositiveInteger(values, "--version")).ConfigureAwait(false);
                 Console.WriteLine($"Built minimap profile {profile.Id}: {profile.Provenance}");
                 return 0;
             }
@@ -119,7 +120,7 @@ public static class Program
                 "  evaluate-clock --profile <id> --manifest <manifest.json> --output <directory>\n" +
                 "  evaluate-clock --profile <id> --diagnostics <clock-samples-directory> --output <directory>\n" +
                 "  analyze-minimap-diagnostics --diagnostics <directory> --output <directory>\n" +
-                "  build-minimap-profile --profile-id <id> --diagnostics <directory> --output-profile <directory>\n" +
+                "  build-minimap-profile --profile-id <id> [--version <positive-integer>] --diagnostics <directory> --output-profile <directory>\n" +
                 "  evaluate-minimap --profile <id-or-path> --diagnostics <directory> --output <directory>");
             return 2;
         }
@@ -150,4 +151,18 @@ public static class Program
         values.TryGetValue(key, out string? value) && !string.IsNullOrWhiteSpace(value)
             ? value
             : throw new ArgumentException($"Missing required argument {key}.");
+
+    private static int? OptionalPositiveInteger(
+        IReadOnlyDictionary<string, string> values,
+        string key)
+    {
+        if (!values.TryGetValue(key, out string? value))
+        {
+            return null;
+        }
+
+        return int.TryParse(value, out int parsed) && parsed > 0
+            ? parsed
+            : throw new ArgumentException($"{key} must be a positive integer.");
+    }
 }

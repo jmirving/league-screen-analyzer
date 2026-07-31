@@ -140,7 +140,12 @@ public sealed class MinimapProfileCatalogTests
             temporary.Path,
             "mismatch",
             "league-replay-minimap-v10",
-            9);
+            10);
+        string path = Path.Combine(temporary.Path, "mismatch", "profile.json");
+        string manifest = await File.ReadAllTextAsync(path);
+        await File.WriteAllTextAsync(
+            path,
+            manifest.Replace("\"version\": 10", "\"version\": 9", StringComparison.Ordinal));
 
         MinimapProfileCatalog catalog = MinimapProfileCatalog.Discover(
             [new MinimapProfileSearchRoot(
@@ -150,6 +155,27 @@ public sealed class MinimapProfileCatalogTests
         Assert.False(catalog.TryGet("league-replay-minimap-v10", out _));
         Assert.Contains(catalog.Errors, error =>
             error.Message.Contains("declares version 9", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task MismatchedExplicitFamily_IsRejectedBeforeWriting()
+    {
+        using TemporaryDirectory temporary = new();
+        string directory = Path.Combine(temporary.Path, "mismatch");
+        string path = Path.Combine(directory, "profile.json");
+
+        InvalidDataException exception = await Assert.ThrowsAsync<InvalidDataException>(
+            () => MinimapProfileSerializer.SaveAsync(
+                BuiltInMinimapProfiles.LeagueReplayMinimapV1 with
+                {
+                    Id = "league-replay-minimap-v2",
+                    Version = 2,
+                    FamilyId = "other-minimap"
+                },
+                path));
+
+        Assert.Contains("declares family 'other-minimap'", exception.Message);
+        Assert.False(File.Exists(path));
     }
 
     [Fact]

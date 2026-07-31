@@ -50,23 +50,23 @@ public sealed class MainWindowLayoutTests
                     RequiredElement<ComboBox>(window, "MinimapProfileSelector");
                 Assert.True(minimapSelector.IsEnabled);
                 Assert.Equal(
-                    ["league-replay-minimap-v1"],
+                    ["league-replay-minimap-v1", "league-replay-minimap-v2"],
                     viewModel.AvailableMinimapProfiles.Select(profile => profile.Id).ToArray());
                 Assert.Equal(
-                    "league-replay-minimap-v1",
+                    "league-replay-minimap-v2",
                     viewModel.MinimapProfileId);
                 Assert.Equal(
-                    "league-replay-minimap-v1",
+                    "league-replay-minimap-v2",
                     viewModel.ActiveMinimapProfileId);
                 Assert.NotNull(minimapSelector.SelectedItem);
                 Assert.Contains(
-                    "league-replay-minimap-v1",
+                    "league-replay-minimap-v2",
                     RequiredElement<TextBlock>(
                         window,
                         "SelectedMinimapProfileIdText").Text);
                 viewModel.MinimapProfileId = "missing-minimap-profile";
                 Assert.Equal(
-                    "league-replay-minimap-v1",
+                    "league-replay-minimap-v2",
                     viewModel.MinimapProfileId);
                 Assert.Contains(
                     "missing-minimap-profile",

@@ -191,7 +191,10 @@ public sealed class MinimapProfileCatalog
                 {
                     MinimapValidationProfile profile =
                         MinimapProfileSerializer.Load(profilePath);
-                    _ = ProfileVersionKey.Parse(profile.Id, profile.Version);
+                    _ = ProfileVersionKey.Parse(
+                        profile.Id,
+                        profile.Version,
+                        profile.FamilyId);
                     discovered.Add((
                         profile,
                         profilePath,
@@ -272,7 +275,10 @@ public sealed class MinimapProfileCatalog
         MinimapProfileProvenance provenance,
         string? sourcePath)
     {
-        ProfileVersionKey key = ProfileVersionKey.Parse(profile.Id, profile.Version);
+        ProfileVersionKey key = ProfileVersionKey.Parse(
+            profile.Id,
+            profile.Version,
+            profile.FamilyId);
         return new MinimapProfileCatalogEntry(
             profile.Id,
             profile.DisplayName,

@@ -362,6 +362,7 @@ public static class MinimapProfileSerializer
         CancellationToken cancellationToken = default)
     {
         profile.Validate();
+        _ = ProfileVersionKey.Parse(profile.Id, profile.Version, profile.FamilyId);
         Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(path))!);
         await using FileStream stream = File.Create(path);
         await JsonSerializer.SerializeAsync(stream, profile, Options, cancellationToken).ConfigureAwait(false);
@@ -377,7 +378,9 @@ public static class MinimapProfileSerializer
                 stream,
                 Options,
                 cancellationToken).ConfigureAwait(false);
-        return (profile ?? throw new InvalidDataException("Minimap profile is empty.")).Validate();
+        profile = (profile ?? throw new InvalidDataException("Minimap profile is empty.")).Validate();
+        _ = ProfileVersionKey.Parse(profile.Id, profile.Version, profile.FamilyId);
+        return profile;
     }
 
     public static MinimapValidationProfile Load(string path)
@@ -385,6 +388,8 @@ public static class MinimapProfileSerializer
         using FileStream stream = File.OpenRead(path);
         MinimapValidationProfile? profile =
             JsonSerializer.Deserialize<MinimapValidationProfile>(stream, Options);
-        return (profile ?? throw new InvalidDataException("Minimap profile is empty.")).Validate();
+        profile = (profile ?? throw new InvalidDataException("Minimap profile is empty.")).Validate();
+        _ = ProfileVersionKey.Parse(profile.Id, profile.Version, profile.FamilyId);
+        return profile;
     }
 }

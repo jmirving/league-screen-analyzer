@@ -76,14 +76,14 @@ public sealed class MinimapFeatureAndValidationTests
         await MinimapProfileSerializer.SaveAsync(PermissiveProfile(), path);
 
         MinimapValidationProfile loaded = await MinimapProfileSerializer.LoadAsync(path);
-        Assert.Equal("test-minimap", loaded.Id);
+        Assert.Equal("test-minimap-v1", loaded.Id);
 
         await File.WriteAllTextAsync(path, """{"id":"broken"}""");
         await Assert.ThrowsAnyAsync<Exception>(() => MinimapProfileSerializer.LoadAsync(path));
     }
 
     private static MinimapValidationProfile PermissiveProfile() => new(
-        "test-minimap",
+        "test-minimap-v1",
         "Test minimap",
         1,
         SessionMode.ReplayContinuous,

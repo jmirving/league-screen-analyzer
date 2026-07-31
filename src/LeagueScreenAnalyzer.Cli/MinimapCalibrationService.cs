@@ -70,12 +70,32 @@ public sealed class MinimapCalibrationService
         return report;
     }
 
+    public Task<MinimapValidationProfile> BuildProfileAsync(
+        string profileId,
+        string diagnosticsDirectory,
+        string outputProfileDirectory,
+        CancellationToken cancellationToken = default) =>
+        BuildProfileAsync(
+            profileId,
+            diagnosticsDirectory,
+            outputProfileDirectory,
+            null,
+            cancellationToken);
+
     public async Task<MinimapValidationProfile> BuildProfileAsync(
         string profileId,
         string diagnosticsDirectory,
         string outputProfileDirectory,
+        int? profileVersion,
         CancellationToken cancellationToken = default)
     {
+        ProfileVersionKey identity = ProfileVersionKey.ParseId(profileId);
+        if (profileVersion is not null && profileVersion != identity.Version)
+        {
+            throw new InvalidDataException(
+                $"Profile '{profileId}' was requested with version {profileVersion}, but its stable ID declares v{identity.Version}.");
+        }
+
         IReadOnlyList<(string Path, MapDiagnosticSample Sample)> samples =
             await LoadSamplesAsync(diagnosticsDirectory, cancellationToken).ConfigureAwait(false);
         MapFeatureValues[] valid = samples
@@ -95,7 +115,8 @@ public sealed class MinimapCalibrationService
         {
             Id = profileId,
             DisplayName = $"{profileId} labeled calibration",
-            Version = 1,
+            Version = identity.Version,
+            FamilyId = identity.Family,
             ExpectedAspectRatio = expectedAspect,
             AspectRatioTolerance = Math.Max(0.01, valid.Max(value =>
                 Math.Abs(value.AspectRatio - expectedAspect) / expectedAspect) + 0.005),
