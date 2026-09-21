@@ -245,3 +245,11 @@ For the minimap milestone, manually load valid CLOCK/MINIMAP regions, select `le
 ## Next milestone
 
 Consume saved timestamped minimap observations and detect a first limited set of map points of interest, while preserving confidence and provenance.
+
+## License and reuse
+
+This repository is not open source. Copyright © 2026 Joseph Irving. All rights reserved.
+
+No permission is granted to copy, modify, distribute, sublicense, sell, or incorporate this repository's original code, documentation, designs, prompts, schemas, models, or other original material into another project without prior written permission from the copyright owner.
+
+Third-party software, data, trademarks, game assets, APIs, and other third-party materials remain subject to their respective owners' rights and licenses. See [LICENSE](LICENSE).
